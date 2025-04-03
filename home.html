@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Molecule Viewer</title> <!-- Default title -->
+    <link rel="icon" href="molecule-icon.png" type="image/png"> <!-- Add an appropriate favicon -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="./molecules.js"></script> <!-- Reference the new molecules.js file -->
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background: linear-gradient(to bottom, #1a1a2e, #16213e);
+            font-family: Arial, sans-serif;
+        }
+
+        #titleBar {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 10px 20px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
+            z-index: 20;
+        }
+
+        #titleBar h1 {
+            margin: 0;
+            font-size: 24px;
+        }
+
+        #titleBar p {
+            margin: 5px 0 0;
+            font-size: 14px;
+        }
+
+        #menu {
+            position: absolute;
+            top: 80px; /* Positioned below the title bar */
+            left: 20px;
+            z-index: 10;
+        }
+
+        #description {
+            position: absolute;
+            left: 20px;
+            z-index: 10;
+            color: black;
+            background-color: rgba(255, 255, 255, 0.9);
+            padding: 10px;
+            border-radius: 5px;
+            max-width: 300px;
+            overflow: auto;
+        }
+
+        #description h2 {
+            margin: 0;
+            font-size: 18px;
+        }
+
+        #description p {
+            margin: 5px 0;
+            font-size: 14px;
+        }
+
+        #legend li {
+            margin-bottom: 5px;
+        }
+
+        #description img {
+            max-width: 100%;
+            max-height: 150px;
+            margin-top: 10px;
+            display: none;
+        }
+        
+        #container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100vw; /* Use viewport width */
+            height: 100vh; /* Use viewport height */
+            overflow: hidden;
+        }
+        
+        #controls {
+            position: absolute;
+            top: 80px; /* Positioned below the title bar */
+            right: 20px; /* Aligned to the right */
+            z-index: 10;
+            text-align: right;
+            background-color: rgba(0, 0, 0, 0.8); /* Add a background for better visibility */
+            padding: 10px;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5); /* Add a subtle shadow */
+            display: flex;
+            flex-direction: column; /* Stack elements vertically */
+            gap: 10px; /* Add spacing between elements */
+        }
+
+        #controls label {
+            display: block;
+            font-size: 14px;
+            color: white;
+            margin-bottom: 5px;
+        }
+
+        #controls input[type="range"] {
+            width: 150px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <header id="titleBar">
+        <h1>3D Molecule Viewer</h1>
+        <p>Explore molecular structures, their details, and Wikipedia summaries interactively.</p>
+    </header>
+    <div id="menu">
+        <select id="moleculeSelector"></select> <!-- Dropdown menu will be populated dynamically -->
+    </div>
+    <div id="container"></div>
+    <div id="controls">
+        <label for="speedSlider">Rotation Speed</label>
+        <input type="range" id="speedSlider" min="0" max="0.05" step="0.001" value="0.005">
+        <label for="zoomSlider">Zoom</label>
+        <input type="range" id="zoomSlider" min="10" max="100" value="50">
+        <label for="fontSizeSlider">Atom Font Size</label>
+        <input type="range" id="fontSizeSlider" min="20" max="80" value="40">
+        <button id="randomizeButton">Randomize</button> <!-- Moved Randomize button below Atom Font Size slider -->
+    </div>
+    <div id="description">
+        <h2 id="moleculeName">Select a Molecule</h2>
+        <p id="moleculeDetails">Details about the molecule will appear here.</p>
+        <p id="moleculeBonds">Number of bonds: 0</p>
+        <h3>Wikipedia Summary:</h3>
+        <p id="moleculeWiki">Loading Wikipedia summary...</p>
+        <a id="moleculeWikiLink" href="#" target="_blank" style="display: none; font-size: 12px; color: blue; text-decoration: underline;">
+            View <span id="moleculeWikiLinkText"></span> on Wikipedia <span style="font-size: 10px;">↗</span>
+        </a>
+        <img id="moleculeImage" src="" alt="Molecule Image" style="max-width: 100%; max-height: 150px; margin-top: 10px; display: none;">
+        <h3>Legend:</h3>
+        <ul id="legend" style="list-style: none; padding: 0; margin: 0;">
+            <li><span style="color: #000000;">●</span> Carbon (Black)</li>
+            <li><span style="color: #ffffff;">●</span> Hydrogen (White)</li>
+            <li><span style="color: #ff3333;">●</span> Oxygen (Red)</li>
+            <li><span style="color: #0000ff;">●</span> Nitrogen (Blue)</li>
+        </ul>
+    </div>
+
+    <script>
+        // Initialize Three.js scene
+        const container = document.getElementById('container');
+        const width = container.clientWidth;
+        const height = container.clientHeight;
+
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, width / height, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+
+        renderer.setSize(width, height);
+        renderer.setClearColor(0x16213e);
+        container.appendChild(renderer.domElement);
+
+        // Set the camera position closer
+        camera.position.z = 30; // Reduced from 50 to 30 for a closer default zoom
+
+        // Lighting
+        const ambientLight = new THREE.AmbientLight(0x404040);
+        scene.add(ambientLight);
+        
+        const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+        directionalLight.position.set(1, 1, 1);
+        scene.add(directionalLight);
+
+        // Function to create a molecule
+        function createMolecule(atoms, bonds) {
+            const moleculeGroup = new THREE.Group();
+
+            // Create atoms with labels
+            const atomMeshes = atoms.map((atom, index) => {
+                const geometry = new THREE.SphereGeometry(atom.size, 32, 32);
+                const material = new THREE.MeshPhongMaterial({ color: atom.color });
+                const mesh = new THREE.Mesh(geometry, material);
+                mesh.position.set(atom.position.x, atom.position.y, atom.position.z);
+                moleculeGroup.add(mesh);
+
+                // Add text label for the atom
+                const fontSize = parseInt(document.getElementById('fontSizeSlider').value, 10); // Get current font size
+                const label = createTextLabel(atom.label || "", fontSize); // Use the atom's label or an empty string
+                label.position.set(atom.position.x, atom.position.y + atom.size + 0.5, atom.position.z); // Position above the atom
+                moleculeGroup.add(label);
+
+                return mesh;
+            });
+
+            // Create bonds
+            bonds.forEach(bond => {
+                const bondGeometry = new THREE.CylinderGeometry(0.3, 0.3, bond.length, 8);
+                const bondMaterial = new THREE.MeshPhongMaterial({ color: 0xcccccc });
+                const bondMesh = new THREE.Mesh(bondGeometry, bondMaterial);
+
+                // Position and rotate bond
+                const start = atomMeshes[bond.start].position;
+                const end = atomMeshes[bond.end].position;
+                const midPoint = new THREE.Vector3().addVectors(start, end).multiplyScalar(0.5);
+                bondMesh.position.copy(midPoint);
+
+                const direction = new THREE.Vector3().subVectors(end, start).normalize();
+                const axis = new THREE.Vector3(0, 1, 0).cross(direction).normalize();
+                const angle = Math.acos(new THREE.Vector3(0, 1, 0).dot(direction));
+                bondMesh.quaternion.setFromAxisAngle(axis, angle);
+
+                moleculeGroup.add(bondMesh);
+            });
+
+            return moleculeGroup;
+        }
+
+        // Function to create a text label
+        function createTextLabel(text, fontSize = 32) {
+            const canvas = document.createElement('canvas');
+            const context = canvas.getContext('2d');
+
+            // Set canvas size and font
+            canvas.width = 256;
+            canvas.height = 128;
+            context.font = `${fontSize}px Arial`;
+            context.fillStyle = 'white';
+            context.textAlign = 'center';
+            context.textBaseline = 'middle';
+
+            // Draw the text
+            context.clearRect(0, 0, canvas.width, canvas.height);
+            context.fillText(text, canvas.width / 2, canvas.height / 2);
+
+            // Create texture from canvas
+            const texture = new THREE.CanvasTexture(canvas);
+            texture.needsUpdate = true; // Ensure the texture updates
+            const material = new THREE.SpriteMaterial({ map: texture, transparent: true });
+            const sprite = new THREE.Sprite(material);
+
+            // Scale the sprite uniformly based on font size
+            const scaleFactor = fontSize / 16; // Adjust scale factor as needed
+            sprite.scale.set(scaleFactor, scaleFactor, 1);
+
+            // Store the label text in the sprite for later use
+            sprite.userData.labelText = text;
+
+            return sprite;
+        }
+
+        // Function to update the legend dynamically
+        function updateLegend(atoms) {
+            const legend = document.getElementById('legend');
+            legend.innerHTML = ''; // Clear the existing legend
+
+            // Use a Map to store unique atom types
+            const uniqueAtoms = new Map();
+
+            // Collect unique atom types and their details
+            atoms.forEach(atom => {
+                if (atom.label && elementDetails[atom.label]) {
+                    const key = atom.label; // Use the label as the key
+                    if (!uniqueAtoms.has(key)) {
+                        uniqueAtoms.set(key, elementDetails[atom.label]);
+                    }
+                }
+            });
+
+            // Populate the legend
+            uniqueAtoms.forEach((details, label) => {
+                const li = document.createElement('li');
+                li.style.marginBottom = '10px'; // Add spacing between legend items
+                li.innerHTML = `
+                    <div style="display: flex; align-items: center;">
+                        <span style="color: ${`#${details.color.toString(16).padStart(6, '0')}`}; font-size: 20px; margin-right: 10px;">●</span>
+                        <div>
+                            <strong>${details.name} (${label})</strong>
+                            <div style="font-size: 12px; color: #555;">
+                                Group: ${details.group}<br>
+                                Atomic Mass: ${details.atomicMass}
+                            </div>
+                        </div>
+                    </div>
+                `;
+                legend.appendChild(li);
+            });
+        }
+
+        let moleculeGroup;
+        let rotationSpeed = 0.005; // Reduced default rotation speed for slower animation
+
+        // Populate the dropdown menu with molecules from molecules.js
+        const moleculeSelector = document.getElementById('moleculeSelector');
+        Object.keys(molecules).forEach(key => {
+            const option = document.createElement('option');
+            option.value = key;
+            option.textContent = molecules[key].name;
+            moleculeSelector.appendChild(option);
+        });
+
+        // Function to fetch Wikipedia summary and image
+        async function fetchWikipediaSummary(moleculeName) {
+            const apiUrl = `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(moleculeName)}`;
+            try {
+                const response = await fetch(apiUrl);
+                if (!response.ok) {
+                    throw new Error('Failed to fetch Wikipedia summary');
+                }
+                const data = await response.json();
+                if (data.extract) {
+                    document.getElementById('moleculeWiki').innerText = data.extract;
+                } else {
+                    document.getElementById('moleculeWiki').innerText = 'No summary available.';
+                }
+
+                // Update the image if available
+                const moleculeImage = document.getElementById('moleculeImage');
+                if (data.thumbnail && data.thumbnail.source) {
+                    moleculeImage.src = data.thumbnail.source;
+                    moleculeImage.style.display = 'block';
+                } else {
+                    moleculeImage.style.display = 'none';
+                }
+
+                // Update the Wikipedia link
+                const moleculeWikiLink = document.getElementById('moleculeWikiLink');
+                const moleculeWikiLinkText = document.getElementById('moleculeWikiLinkText');
+                if (data.content_urls && data.content_urls.desktop && data.content_urls.desktop.page) {
+                    moleculeWikiLink.href = data.content_urls.desktop.page;
+                    moleculeWikiLinkText.innerText = moleculeName; // Set the molecule name dynamically
+                    moleculeWikiLink.style.display = 'inline';
+                } else {
+                    moleculeWikiLink.style.display = 'none';
+                }
+            } catch (error) {
+                document.getElementById('moleculeWiki').innerText = 'Error fetching Wikipedia summary.';
+                document.getElementById('moleculeImage').style.display = 'none';
+                document.getElementById('moleculeWikiLink').style.display = 'none';
+            }
+        }
+
+        // Function to update the molecule
+        function updateMolecule(selectedKey) {
+            if (moleculeGroup) {
+                scene.remove(moleculeGroup);
+            }
+
+            const selectedMolecule = molecules[selectedKey];
+            moleculeGroup = createMolecule(selectedMolecule.atoms, selectedMolecule.bonds);
+            scene.add(moleculeGroup);
+
+            // Update molecule description
+            document.getElementById('moleculeName').innerText = selectedMolecule.name;
+            document.getElementById('moleculeDetails').innerText = selectedMolecule.details;
+            document.getElementById('moleculeBonds').innerText = `Number of bonds: ${selectedMolecule.bonds.length}`;
+
+            // Update the page title with the molecule name
+            document.title = `${selectedMolecule.name} - 3D Molecule Viewer`;
+
+            // Fetch Wikipedia summary and image
+            fetchWikipediaSummary(selectedMolecule.name.split(' ')[0]); // Use the first word of the molecule name
+
+            // Update the legend
+            updateLegend(selectedMolecule.atoms);
+        }
+
+        // Handle molecule selection
+        moleculeSelector.addEventListener('change', (event) => {
+            updateMolecule(event.target.value);
+        });
+
+        // Handle zoom slider
+        const zoomSlider = document.getElementById('zoomSlider');
+        zoomSlider.addEventListener('input', (event) => {
+            camera.position.z = event.target.value;
+        });
+
+        // Handle speed slider
+        const speedSlider = document.getElementById('speedSlider');
+        speedSlider.addEventListener('input', (event) => {
+            rotationSpeed = parseFloat(event.target.value);
+        });
+
+        // Handle font size slider
+        const fontSizeSlider = document.getElementById('fontSizeSlider');
+        fontSizeSlider.addEventListener('input', (event) => {
+            const newFontSize = parseInt(event.target.value, 10);
+
+            // Update all text labels in the molecule group
+            if (moleculeGroup) {
+                moleculeGroup.children.forEach((child) => {
+                    if (child.type === 'Sprite') {
+                        const labelText = child.userData.labelText || ""; // Retrieve the stored label text
+                        const newLabel = createTextLabel(labelText, newFontSize); // Create a new label with updated font size
+                        child.material.map = newLabel.material.map; // Update the texture
+                        child.scale.set(newLabel.scale.x, newLabel.scale.y, newLabel.scale.z); // Update the scale
+                    }
+                });
+            }
+        });
+
+        // Handle window resize
+        window.addEventListener('resize', () => {
+            const width = window.innerWidth;
+            const height = window.innerHeight;
+
+            // Update camera aspect ratio and projection matrix
+            camera.aspect = width / height;
+            camera.updateProjectionMatrix();
+
+            // Update renderer size
+            renderer.setSize(width, height);
+        });
+
+        // Initialize with the first molecule
+        updateMolecule(moleculeSelector.value);
+
+        // Animation loop
+        function animate() {
+            requestAnimationFrame(animate);
+            
+            // Rotate the entire molecule
+            if (moleculeGroup) {
+                moleculeGroup.rotation.x += rotationSpeed;
+                moleculeGroup.rotation.y += rotationSpeed;
+            }
+            
+            renderer.render(scene, camera);
+        }
+        
+        animate();
+
+        // Function to position the description box relative to the dropdown
+        function positionDescriptionBox() {
+            const menu = document.getElementById('menu');
+            const description = document.getElementById('description');
+
+            // Get the bounding box of the dropdown menu
+            const menuRect = menu.getBoundingClientRect();
+
+            // Position the description box below the dropdown menu
+            description.style.top = `${menuRect.bottom + 10}px`; // Add 10px gap
+        }
+
+        // Reposition the description box on window resize
+        window.addEventListener('resize', positionDescriptionBox);
+
+        // Initial positioning
+        positionDescriptionBox();
+
+        let randomizeInterval;
+
+        // Function to pick a random molecule
+        function pickRandomMolecule() {
+            const moleculeKeys = Object.keys(molecules);
+            const randomKey = moleculeKeys[Math.floor(Math.random() * moleculeKeys.length)];
+            moleculeSelector.value = randomKey; // Update the dropdown
+            updateMolecule(randomKey); // Update the molecule
+        }
+
+        // Handle the Randomize button
+        const randomizeButton = document.getElementById('randomizeButton');
+        randomizeButton.addEventListener('click', () => {
+            if (randomizeInterval) {
+                clearInterval(randomizeInterval); // Stop the interval if already running
+                randomizeInterval = null;
+                randomizeButton.innerText = 'Randomize'; // Update button text
+            } else {
+                pickRandomMolecule(); // Pick a random molecule immediately
+                randomizeInterval = setInterval(pickRandomMolecule, 10000); // Start interval to pick every 10 seconds
+                randomizeButton.innerText = 'Stop Randomize'; // Update button text
+            }
+        });
+    </script>
+</body>
+</html>
