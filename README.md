@@ -1,6 +1,8 @@
-This project was entirely AI generated, using some basic prompts, and conversation with GitHub Copilot, Hugging Face Anychat with Deepseek and Google Gemini. I wrote no code directly at all. I know little about elements or chemistry so this may be inaccurate - which was an interesting part of the experiment. There are many possible refinements and optimisation but I think it fulfilled my ask. 
+This project was entirely AI generated, using some basic prompts, and conversation with GitHub Copilot, Hugging Face Anychat with Deepseek and Google Gemini. I wrote no code directly at all. I know little about elements or chemistry so this may be inaccurate - which was an interesting part of the experiment. There are many possible refinements and optimisation. 
 
 To see the code live go here: https://danamini.github.io/molecule-viewer/ 
+
+![Animation of the 3D Molecule Viewer](molecule-viewer.gif)
 
 Everything after this is AI generated...
 
