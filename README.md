@@ -1,18 +1,13 @@
-This project was entirely AI generated, using some basic prompts, and conversation with GitHub Copilot, Hugging Face Anychat with Deepseek and Google Gemini. I wrote no code directly at all. I know little about elements or chemistry so this may be inaccurate - which was an interesting part of the experiment. There are many possible refinements and optimisation. 
-
-To see the code live go here: https://danamini.github.io/molecule-viewer/ 
-
-![The landing page: everything is made of something smaller](docs/landing.jpg)
-
-Everything after this is AI generated...
-
-
-
 # Molecule Viewer
 
-Everything is made of something smaller. Start with something you could hold, a snowflake, a grain of
-salt, a Z80 processor, and zoom in: its material, molecules, atoms, the nucleus, a proton's quarks, and
-finally the Planck length. Thirty-two powers of ten, with the scale kept human all the way down.
+**[Open the viewer](https://danamini.github.io/molecule-viewer/)**
+
+An interactive 3D explorer of what things are made of. Start with something you could hold (a snowflake,
+a grain of salt, a Z80 processor) and zoom in: its material, its molecules, their atoms, the nucleus, a
+proton's quarks, and finally the Planck length. Thirty-two powers of ten in one continuous zoom, with
+the scale kept human all the way down.
+
+![The landing page: everything is made of something smaller](docs/landing.jpg)
 
 | Molecules as electron clouds | An atom's orbitals | A proton's quarks |
 | --- | --- | --- |
@@ -96,6 +91,14 @@ to add a molecule, a journey or a part.
   ([righto.com](https://www.righto.com/2014/10/how-z80s-registers-are-implemented-down.html)); the
   control area is drawn schematically. The journey objects and the transistor are drawn, not photographed.
 - Summaries: Wikipedia's REST API, fetched live. Rendering: [three.js](https://threejs.org) r170.
+
+## About this project
+
+This is an experiment in building with AI: I have not written any of the code by hand. The first version
+came from simple prompts and conversations with GitHub Copilot, Hugging Face Anychat (with DeepSeek) and
+Google Gemini; this version was rebuilt in conversation with Anthropic's Claude. I know little about
+chemistry or physics, so checking how accurate the results are has been part of the experiment. The data
+is sourced and credited above so anyone can check it, and corrections are welcome.
 
 ## License
 
