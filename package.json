@@ -1,6 +1,7 @@
 {
   "name": "molecule-viewer",
   "private": true,
+  "license": "MIT",
   "type": "module",
   "description": "Real molecules in 3D, and a zoom from things you can hold down to the Planck length.",
   "scripts": {

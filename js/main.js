@@ -386,7 +386,7 @@ async function loadWiki(title) {
     const w = await wikipedia(title, ctrl.signal);
     const box = $('#wiki');
     if (!box) return;
-    box.innerHTML = `${w.thumb ? `<img src="${esc(w.thumb)}" alt="" loading="lazy">` : ''}<p>${esc(w.extract)}</p>
+    box.innerHTML = `<p>${esc(w.extract)}</p>
       <a class="more" href="${esc(w.url)}" target="_blank" rel="noopener">Read more on Wikipedia</a>
       <p class="note">Text from Wikipedia, <a href="https://creativecommons.org/licenses/by-sa/4.0/" target="_blank" rel="noopener">CC BY-SA 4.0</a>.</p>`;
   } catch (err) {
