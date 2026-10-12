@@ -68,6 +68,8 @@ await test('landing page shows over the snowflake', async page => {
   expect(await page.isVisible('#intro'), 'intro should be visible with no address');
   expect((await page.$$('.chapter')).length === 5, 'five chapters');
   expect(await levels(page) === 'snowflake', 'snowflake behind the intro');
+  expect((await page.$$('.chapter [data-go^="element-"]')).length === 6, 'element shortcuts');
+  expect((await page.$$('.chapter [data-go^="particle-"]')).length === 6, 'particle shortcuts');
   await page.click('#exploreFree');
   await wait(page, 2000);
   expect(!(await page.isVisible('#intro')), 'intro hides on Explore');
@@ -134,6 +136,19 @@ await test('periodic table: views, steady hover, keyboard', async page => {
   await page.keyboard.press('Enter');
   await wait(page, 2800);
   expect(await levels(page) === 'table>atom', 'Enter dives into the highlighted element');
+});
+
+await test('landing shortcuts open an element and a particle', async page => {
+  await page.goto(BASE);
+  await wait(page, 2000);
+  await page.click('.chapter [data-go="element-Fe"]');
+  await wait(page, 4500);
+  expect(await title(page) === 'Iron atom', `element shortcut opened ${await title(page)}`);
+  await page.goto(BASE);
+  await wait(page, 2000);
+  await page.click('.chapter [data-go="particle-e"]');
+  await wait(page, 4500);
+  expect(await title(page) === 'Electron', `particle shortcut opened ${await title(page)}`);
 });
 
 await test('particle zoo', async page => {

@@ -1040,14 +1040,16 @@ addEventListener('hashchange', () => { const k = location.hash.slice(1); if (k &
 const CHAPTERS = [
   { size: '3 mm', title: 'Things you can hold', line: 'A snowflake, a grain of salt, a diamond. Each shape is a clue to what is inside.', c: '#cfe8ff', things: true },
   { size: '1 nm', title: 'Molecules', line: 'Atoms joined into shapes: water, caffeine, the letters of DNA. Real 3D structures, and any of PubChem’s millions.', c: '#7cc4ff', go: 'caffeine' },
-  { size: '0.3 nm', title: 'Elements', line: 'Every molecule is built from just 118 kinds of atom.', c: '#f2b45a', go: 'table' },
-  { size: `${pow10(-15)} m`, title: 'Particles', line: 'Every atom is built from a few of 17 particles that have no parts at all.', c: '#b53cff', go: 'particles' },
+  { size: '0.3 nm', title: 'Elements', line: 'Every molecule is built from just 118 kinds of atom.', c: '#f2b45a', go: 'table', elements: ['H', 'C', 'O', 'Fe', 'Au', 'U'] },
+  { size: `${pow10(-15)} m`, title: 'Particles', line: 'Every atom is built from a few of 17 particles that have no parts at all.', c: '#b53cff', go: 'particles', particles: ['u', 'd', 'e', 'gamma', 'g', 'H'] },
   { size: `${pow10(-35)} m`, title: 'The Planck length', line: 'Below this, nobody knows. Physics, as we have it, runs out.', c: '#b48cff', guided: true },
 ];
 function renderChapters() {
   $('#chapters').innerHTML = CHAPTERS.map((ch, i) => `
     <li style="--c:${ch.c}"><div class="chapter" role="button" tabindex="0" data-chapter="${i}">
       <span class="size">${ch.size}</span><b>${esc(ch.title)}</b><span class="line">${esc(ch.line)}</span>
+      ${ch.elements ? `<span class="icons">${ch.elements.map(sym => { const el = ELEMENTS[sym]; return `<button type="button" class="mini" data-go="element-${sym}" title="${esc(el.name)}" aria-label="${esc(el.name)}" style="--c:${hex(FAMILY_COLORS[el.family])}">${sym}</button>`; }).join('')}</span>` : ''}
+      ${ch.particles ? `<span class="icons">${ch.particles.map(k => { const pt = PARTICLES.find(x => x.key === k); return `<button type="button" class="mini" data-go="particle-${k}" title="${esc(pt.name)}" aria-label="${esc(pt.name)}" style="--c:${hex(PARTICLE_FAMILIES[pt.family].color)}">${esc(pt.symbol)}${pt.sub ? `<sub>${esc(pt.sub)}</sub>` : ''}</button>`; }).join('')}</span>` : ''}
       ${ch.things ? `<span class="icons">${THINGS.map(t => `<button type="button" data-thing="${t.key}" title="${esc(t.title)}" aria-label="${esc(t.title)}"><svg viewBox="0 0 44 44">${THING_ICONS[t.icon]}</svg></button>`).join('')}</span>` : ''}
     </div></li>`).join('');
 }
@@ -1067,6 +1069,8 @@ function hideIntro() {
 $('#chapters').addEventListener('click', e => {
   const t = e.target.closest('[data-thing]');
   if (t) { hideIntro(); go(`thing-${t.dataset.thing}`); return; }
+  const g = e.target.closest('[data-go]');
+  if (g) { hideIntro(); go(g.dataset.go); return; }
   const c = e.target.closest('[data-chapter]');
   if (!c) return;
   const ch = CHAPTERS[+c.dataset.chapter];
