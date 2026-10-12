@@ -90,7 +90,10 @@ to add a molecule, a journey or a part.
 - Z80 die: the datapath layout follows Ken Shirriff's reverse engineering of Z80 die photos
   ([righto.com](https://www.righto.com/2014/10/how-z80s-registers-are-implemented-down.html)); the
   control area is drawn schematically. The journey objects and the transistor are drawn, not photographed.
-- Summaries: Wikipedia's REST API, fetched live. Rendering: [three.js](https://threejs.org) r170.
+- Summaries: Wikipedia's REST API, fetched live and shown with attribution; Wikipedia text is
+  [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/).
+- Software: [three.js](https://threejs.org) r170 (MIT). Fonts: Big Shoulders Display and IBM Plex Sans
+  via Google Fonts ([SIL Open Font License](https://openfontlicense.org)). Tests use Playwright (Apache 2.0).
 
 ## About this project
 
