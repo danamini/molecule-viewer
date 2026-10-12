@@ -1,0 +1,14 @@
+{
+  "name": "molecule-viewer",
+  "private": true,
+  "type": "module",
+  "description": "Real molecules in 3D, and a zoom from things you can hold down to the Planck length.",
+  "scripts": {
+    "serve": "python3 -m http.server 8000",
+    "test": "node tests/smoke.mjs",
+    "build:library": "python3 tools/build_library.py"
+  },
+  "devDependencies": {
+    "playwright": "^1.56.0"
+  }
+}

@@ -1,482 +1,154 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>3D Molecule Viewer</title> <!-- Default title -->
-    <link rel="icon" href="molecule-icon.png" type="image/png"> <!-- Add an appropriate favicon -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <script src="./molecules.js"></script> <!-- Reference the new molecules.js file -->
-    <style>
-        body {
-            margin: 0;
-            padding: 0;
-            overflow: hidden;
-            background: linear-gradient(to bottom, #1a1a2e, #16213e);
-            font-family: Arial, sans-serif;
-        }
-
-        #titleBar {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            background-color: rgba(0, 0, 0, 0.8);
-            color: white;
-            padding: 10px 20px;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
-            z-index: 20;
-        }
-
-        #titleBar h1 {
-            margin: 0;
-            font-size: 24px;
-        }
-
-        #titleBar p {
-            margin: 5px 0 0;
-            font-size: 14px;
-        }
-
-        #menu {
-            position: absolute;
-            top: 80px; /* Positioned below the title bar */
-            left: 20px;
-            z-index: 10;
-        }
-
-        #description {
-            position: absolute;
-            left: 20px;
-            z-index: 10;
-            color: black;
-            background-color: rgba(255, 255, 255, 0.9);
-            padding: 10px;
-            border-radius: 5px;
-            max-width: 300px;
-            overflow: auto;
-        }
-
-        #description h2 {
-            margin: 0;
-            font-size: 18px;
-        }
-
-        #description p {
-            margin: 5px 0;
-            font-size: 14px;
-        }
-
-        #legend li {
-            margin-bottom: 5px;
-        }
-
-        #description img {
-            max-width: 100%;
-            max-height: 150px;
-            margin-top: 10px;
-            display: none;
-        }
-        
-        #container {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100vw; /* Use viewport width */
-            height: 100vh; /* Use viewport height */
-            overflow: hidden;
-        }
-        
-        #controls {
-            position: absolute;
-            top: 80px; /* Positioned below the title bar */
-            right: 20px; /* Aligned to the right */
-            z-index: 10;
-            text-align: right;
-            background-color: rgba(0, 0, 0, 0.8); /* Add a background for better visibility */
-            padding: 10px;
-            border-radius: 5px;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5); /* Add a subtle shadow */
-            display: flex;
-            flex-direction: column; /* Stack elements vertically */
-            gap: 10px; /* Add spacing between elements */
-        }
-
-        #controls label {
-            display: block;
-            font-size: 14px;
-            color: white;
-            margin-bottom: 5px;
-        }
-
-        #controls input[type="range"] {
-            width: 150px;
-            margin-bottom: 20px;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Molecule Viewer</title>
+  <meta name="description" content="Explore real molecules in 3D as electron clouds, then zoom into a single atom, its nucleus and the quarks inside a proton.">
+  <meta name="theme-color" content="#03050b">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><circle cx='32' cy='32' r='6' fill='%23f2b45a'/><ellipse cx='32' cy='32' rx='28' ry='10' fill='none' stroke='%237cc4ff' stroke-width='3'/><ellipse cx='32' cy='32' rx='28' ry='10' fill='none' stroke='%237cc4ff' stroke-width='3' transform='rotate(60 32 32)'/><ellipse cx='32' cy='32' rx='28' ry='10' fill='none' stroke='%237cc4ff' stroke-width='3' transform='rotate(120 32 32)'/></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;800&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/app.css">
+  <script type="importmap">
+    { "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+    } }
+  </script>
 </head>
 <body>
-    <header id="titleBar">
-        <h1>3D Molecule Viewer</h1>
-        <p>Explore molecular structures, their details, and Wikipedia summaries interactively.</p>
-    </header>
-    <div id="menu">
-        <select id="moleculeSelector"></select> <!-- Dropdown menu will be populated dynamically -->
+  <div id="stage" aria-label="3D view. Drag to turn, scroll to zoom; scroll in past the closest zoom to enter an atom."></div>
+  <div class="grain" aria-hidden="true"></div>
+
+  <header class="top">
+    <a class="mark" href="./" aria-label="Molecule Viewer, home">Molecule<br>Viewer</a>
+    <div class="actions">
+      <button id="randomBtn" class="act" type="button" title="Jump to a random molecule or element (R)">
+        <svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7h3.5c4 0 6 10 10 10H21M3 17h3.5c1.6 0 2.8-1.6 3.9-3.6M14 9.6C15 7.9 16 7 17 7h4M18 4l3 3-3 3M18 14l3 3-3 3"/></svg><span>Surprise me</span>
+      </button>
+      <button id="tourBtn" class="act" type="button" aria-pressed="false" title="Tour at random: molecules, elements and the snowflake, each followed down a few levels (T)">
+        <svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg><span>Tour</span>
+      </button>
+      <button id="photoBtn" class="act" type="button" title="Save a picture of the view (P)">
+        <svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg><span>Save picture</span>
+      </button>
+      <button id="helpBtn" class="act icon-only" type="button" title="Keyboard and mouse (?)" aria-label="Keyboard and mouse">
+        <svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.7.3-1 .9-1 1.7M12 17h.01"/></svg>
+      </button>
     </div>
-    <div id="container"></div>
-    <div id="controls">
-        <label for="speedSlider">Rotation Speed</label>
-        <input type="range" id="speedSlider" min="0" max="0.05" step="0.001" value="0.005">
-        <label for="zoomSlider">Zoom</label>
-        <input type="range" id="zoomSlider" min="10" max="100" value="50">
-        <label for="fontSizeSlider">Atom Font Size</label>
-        <input type="range" id="fontSizeSlider" min="20" max="80" value="40">
-        <button id="randomizeButton">Randomize</button> <!-- Moved Randomize button below Atom Font Size slider -->
+  </header>
+
+  <nav class="library" id="library" aria-label="Molecule library">
+    <button class="drawer-toggle" id="libraryToggle" type="button" aria-expanded="false" aria-controls="libraryPanel">Library</button>
+    <div class="library-panel" id="libraryPanel">
+      <div class="library-head">
+        <div class="search" role="search">
+          <svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5 21 21"/></svg>
+          <input id="search" type="search" autocomplete="off" spellcheck="false" placeholder="Search molecules and elements" aria-label="Search any molecule" aria-controls="results" aria-expanded="false">
+          <kbd class="hint">/</kbd>
+          <ul id="results" class="results" role="listbox" hidden></ul>
+        </div>
+        <button type="button" class="collapse" id="collapseBtn" title="Hide the library ([)" aria-label="Hide the library" aria-expanded="true" aria-controls="libraryPanel">
+          <svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg>
+        </button>
+      </div>
+      <div class="library-list" id="libraryList"></div>
     </div>
-    <div id="description">
-        <h2 id="moleculeName">Select a Molecule</h2>
-        <p id="moleculeDetails">Details about the molecule will appear here.</p>
-        <p id="moleculeBonds">Number of bonds: 0</p>
-        <h3>Wikipedia Summary:</h3>
-        <p id="moleculeWiki">Loading Wikipedia summary...</p>
-        <a id="moleculeWikiLink" href="#" target="_blank" style="display: none; font-size: 12px; color: blue; text-decoration: underline;">
-            View <span id="moleculeWikiLinkText"></span> on Wikipedia <span style="font-size: 10px;">↗</span>
-        </a>
-        <img id="moleculeImage" src="" alt="Molecule Image" style="max-width: 100%; max-height: 150px; margin-top: 10px; display: none;">
-        <h3>Legend:</h3>
-        <ul id="legend" style="list-style: none; padding: 0; margin: 0;">
-            <li><span style="color: #000000;">●</span> Carbon (Black)</li>
-            <li><span style="color: #ffffff;">●</span> Hydrogen (White)</li>
-            <li><span style="color: #ff3333;">●</span> Oxygen (Red)</li>
-            <li><span style="color: #0000ff;">●</span> Nitrogen (Blue)</li>
-        </ul>
+    <div class="library-rail">
+      <button type="button" class="rail-btn" id="expandBtn" title="Show the library ([)" aria-label="Show the library">
+        <svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+      </button>
+      <button type="button" class="rail-btn" id="railSearch" title="Search (/)" aria-label="Search">
+        <svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5 21 21"/></svg>
+      </button>
     </div>
+  </nav>
 
-    <script>
-        // Initialize Three.js scene
-        const container = document.getElementById('container');
-        const width = container.clientWidth;
-        const height = container.clientHeight;
+  <section class="specimen" aria-live="polite">
+    <h1 id="name">Molecule Viewer</h1>
+    <p class="formula" id="formula"></p>
+    <p class="sub" id="subline"></p>
+  </section>
 
-        const scene = new THREE.Scene();
-        const camera = new THREE.PerspectiveCamera(75, width / height, 0.1, 1000);
-        const renderer = new THREE.WebGLRenderer({ antialias: true });
+  <aside class="details" id="details" aria-label="Details">
+    <button class="sheet-handle" id="sheetHandle" type="button" aria-expanded="false" aria-controls="detailsBody"><span></span>Details</button>
+    <div class="details-body" id="detailsBody"></div>
+  </aside>
 
-        renderer.setSize(width, height);
-        renderer.setClearColor(0x16213e);
-        container.appendChild(renderer.domElement);
+  <div class="trail" id="trail">
+    <div class="crumb-row">
+      <button type="button" class="tool up" id="upBtn" title="Zoom out a level (Esc)" hidden>
+        <svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M8 11h6M16 16l5 5"/></svg><span>Zoom out</span>
+      </button>
+      <ol class="crumbs" id="crumbs" aria-label="Zoom level"></ol>
+    </div>
+    <p class="analogy" id="analogy" aria-live="polite"></p>
+    <div class="ruler" id="ruler" title="Powers of ten, from your height down to the Planck length; the marker is where you are"></div>
+    <div class="scale-row">
+      <div class="scalebar" id="scalebar" aria-hidden="true"><i></i><span></span></div>
+      <span class="mag" id="mag"></span>
+    </div>
+  </div>
 
-        // Set the camera position closer
-        camera.position.z = 30; // Reduced from 50 to 30 for a closer default zoom
+  <div class="dock" id="dock">
+    <div class="seg" role="radiogroup" aria-label="How to draw the molecule" id="modes">
+      <button type="button" role="radio" data-mode="cloud" aria-checked="true" title="Electron clouds (1)">Clouds</button>
+      <button type="button" role="radio" data-mode="ball" aria-checked="false" title="Ball and stick (2)">Ball and stick</button>
+      <button type="button" role="radio" data-mode="space" aria-checked="false" title="Space filling (3)">Space filling</button>
+      <button type="button" role="radio" data-mode="stick" aria-checked="false" title="Skeleton (4)">Skeleton</button>
+    </div>
+    <div class="dock-tools">
+      <button type="button" class="tool" id="labelsBtn" aria-pressed="false" title="Element labels (L)">Labels</button>
+      <button type="button" class="tool" id="spinBtn" aria-pressed="true" title="Turn slowly (Space)">Spin</button>
+      <button type="button" class="tool dive" id="diveBtn" title="Zoom in a level (Enter)">
+        <svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M11 8v6M8 11h6M16 16l5 5"/></svg><span id="diveLabel">Zoom into an atom</span>
+      </button>
+    </div>
+  </div>
 
-        // Lighting
-        const ambientLight = new THREE.AmbientLight(0x404040);
-        scene.add(ambientLight);
-        
-        const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
-        directionalLight.position.set(1, 1, 1);
-        scene.add(directionalLight);
+  <section class="intro" id="intro" aria-labelledby="introTitle" hidden>
+    <div class="intro-inner">
+      <h1 id="introTitle">Everything is made of<br>something smaller.</h1>
+      <p class="lede">Start with something you could hold in your hand. Zoom in, and keep zooming: molecules, atoms, the particles inside them, down to the smallest length physics can name. Thirty-two powers of ten.</p>
+      <div class="intro-actions">
+        <button type="button" class="cta" id="startJourney">
+          <svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>Start the journey
+        </button>
+        <button type="button" class="cta ghost" id="exploreFree">Explore on my own</button>
+      </div>
+      <ol class="chapters" id="chapters" aria-label="The journey, from big to small"></ol>
+    </div>
+  </section>
+  <div class="caption" id="caption" aria-live="polite" hidden><span></span><button type="button" id="captionStop">Stop</button></div>
 
-        // Function to create a molecule
-        function createMolecule(atoms, bonds) {
-            const moleculeGroup = new THREE.Group();
+  <aside class="corner-card" id="cornerCard" aria-label="Where you are" hidden></aside>
+  <div class="tip" id="tip" role="status" hidden></div>
+  <div class="push" id="push" aria-hidden="true"><svg viewBox="0 0 40 40"><circle cx="20" cy="20" r="16"/><circle class="arc" cx="20" cy="20" r="16"/></svg><span></span></div>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <div class="veil" id="veil"><div><b>Molecule Viewer</b><span>Gathering electrons</span></div></div>
 
-            // Create atoms with labels
-            const atomMeshes = atoms.map((atom, index) => {
-                const geometry = new THREE.SphereGeometry(atom.size, 32, 32);
-                const material = new THREE.MeshPhongMaterial({ color: atom.color });
-                const mesh = new THREE.Mesh(geometry, material);
-                mesh.position.set(atom.position.x, atom.position.y, atom.position.z);
-                moleculeGroup.add(mesh);
+  <dialog id="help" class="help">
+    <h2>Getting around</h2>
+    <dl>
+      <dt>Drag</dt><dd>Turn the view</dd>
+      <dt>Scroll or pinch</dt><dd>Zoom. Keep scrolling in to enter an atom, its nucleus, a proton, and finally the Planck length</dd>
+      <dt>Double-click an atom</dt><dd>Zoom into that atom</dd>
+      <dt>Click atoms</dt><dd>Measure: two give a distance, three an angle</dd>
+      <dt><kbd>Enter</kbd> / <kbd>Esc</kbd></dt><dd>Zoom in a level / out a level</dd>
+      <dt><kbd>←</kbd> <kbd>→</kbd></dt><dd>Previous and next molecule</dd>
+      <dt><kbd>1</kbd>–<kbd>4</kbd></dt><dd>Clouds, ball and stick, space filling, skeleton</dd>
+      <dt><kbd>/</kbd></dt><dd>Search elements and PubChem's 100 million compounds</dd>
+      <dt><kbd>E</kbd> <kbd>Q</kbd> <kbd>R</kbd></dt><dd>Periodic table, particle zoo, surprise me</dd>
+      <dt><kbd>L</kbd> <kbd>Space</kbd> <kbd>T</kbd> <kbd>P</kbd></dt><dd>Labels, spin, random tour, save picture</dd>
+      <dt><kbd>[</kbd> <kbd>H</kbd></dt><dd>Fold the library away; hide everything but the view</dd>
+    </dl>
+    <p class="credit">Structures from <a href="https://pubchem.ncbi.nlm.nih.gov" target="_blank" rel="noopener">PubChem</a> 3D conformers; summaries from Wikipedia. Orbitals are hydrogen-like, scaled by Slater's rules: a textbook approximation, not a full quantum calculation.</p>
+    <form method="dialog"><button class="act">Close</button></form>
+  </dialog>
 
-                // Add text label for the atom
-                const fontSize = parseInt(document.getElementById('fontSizeSlider').value, 10); // Get current font size
-                const label = createTextLabel(atom.label || "", fontSize); // Use the atom's label or an empty string
-                label.position.set(atom.position.x, atom.position.y + atom.size + 0.5, atom.position.z); // Position above the atom
-                moleculeGroup.add(label);
-
-                return mesh;
-            });
-
-            // Create bonds
-            bonds.forEach(bond => {
-                const bondGeometry = new THREE.CylinderGeometry(0.3, 0.3, bond.length, 8);
-                const bondMaterial = new THREE.MeshPhongMaterial({ color: 0xcccccc });
-                const bondMesh = new THREE.Mesh(bondGeometry, bondMaterial);
-
-                // Position and rotate bond
-                const start = atomMeshes[bond.start].position;
-                const end = atomMeshes[bond.end].position;
-                const midPoint = new THREE.Vector3().addVectors(start, end).multiplyScalar(0.5);
-                bondMesh.position.copy(midPoint);
-
-                const direction = new THREE.Vector3().subVectors(end, start).normalize();
-                const axis = new THREE.Vector3(0, 1, 0).cross(direction).normalize();
-                const angle = Math.acos(new THREE.Vector3(0, 1, 0).dot(direction));
-                bondMesh.quaternion.setFromAxisAngle(axis, angle);
-
-                moleculeGroup.add(bondMesh);
-            });
-
-            return moleculeGroup;
-        }
-
-        // Function to create a text label
-        function createTextLabel(text, fontSize = 32) {
-            const canvas = document.createElement('canvas');
-            const context = canvas.getContext('2d');
-
-            // Set canvas size and font
-            canvas.width = 256;
-            canvas.height = 128;
-            context.font = `${fontSize}px Arial`;
-            context.fillStyle = 'white';
-            context.textAlign = 'center';
-            context.textBaseline = 'middle';
-
-            // Draw the text
-            context.clearRect(0, 0, canvas.width, canvas.height);
-            context.fillText(text, canvas.width / 2, canvas.height / 2);
-
-            // Create texture from canvas
-            const texture = new THREE.CanvasTexture(canvas);
-            texture.needsUpdate = true; // Ensure the texture updates
-            const material = new THREE.SpriteMaterial({ map: texture, transparent: true });
-            const sprite = new THREE.Sprite(material);
-
-            // Scale the sprite uniformly based on font size
-            const scaleFactor = fontSize / 16; // Adjust scale factor as needed
-            sprite.scale.set(scaleFactor, scaleFactor, 1);
-
-            // Store the label text in the sprite for later use
-            sprite.userData.labelText = text;
-
-            return sprite;
-        }
-
-        // Function to update the legend dynamically
-        function updateLegend(atoms) {
-            const legend = document.getElementById('legend');
-            legend.innerHTML = ''; // Clear the existing legend
-
-            // Use a Map to store unique atom types
-            const uniqueAtoms = new Map();
-
-            // Collect unique atom types and their details
-            atoms.forEach(atom => {
-                if (atom.label && elementDetails[atom.label]) {
-                    const key = atom.label; // Use the label as the key
-                    if (!uniqueAtoms.has(key)) {
-                        uniqueAtoms.set(key, elementDetails[atom.label]);
-                    }
-                }
-            });
-
-            // Populate the legend
-            uniqueAtoms.forEach((details, label) => {
-                const li = document.createElement('li');
-                li.style.marginBottom = '10px'; // Add spacing between legend items
-                li.innerHTML = `
-                    <div style="display: flex; align-items: center;">
-                        <span style="color: ${`#${details.color.toString(16).padStart(6, '0')}`}; font-size: 20px; margin-right: 10px;">●</span>
-                        <div>
-                            <strong>${details.name} (${label})</strong>
-                            <div style="font-size: 12px; color: #555;">
-                                Group: ${details.group}<br>
-                                Atomic Mass: ${details.atomicMass}
-                            </div>
-                        </div>
-                    </div>
-                `;
-                legend.appendChild(li);
-            });
-        }
-
-        let moleculeGroup;
-        let rotationSpeed = 0.005; // Reduced default rotation speed for slower animation
-
-        // Populate the dropdown menu with molecules from molecules.js
-        const moleculeSelector = document.getElementById('moleculeSelector');
-        Object.keys(molecules).forEach(key => {
-            const option = document.createElement('option');
-            option.value = key;
-            option.textContent = molecules[key].name;
-            moleculeSelector.appendChild(option);
-        });
-
-        // Function to fetch Wikipedia summary and image
-        async function fetchWikipediaSummary(moleculeName) {
-            const apiUrl = `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(moleculeName)}`;
-            try {
-                const response = await fetch(apiUrl);
-                if (!response.ok) {
-                    throw new Error('Failed to fetch Wikipedia summary');
-                }
-                const data = await response.json();
-                if (data.extract) {
-                    document.getElementById('moleculeWiki').innerText = data.extract;
-                } else {
-                    document.getElementById('moleculeWiki').innerText = 'No summary available.';
-                }
-
-                // Update the image if available
-                const moleculeImage = document.getElementById('moleculeImage');
-                if (data.thumbnail && data.thumbnail.source) {
-                    moleculeImage.src = data.thumbnail.source;
-                    moleculeImage.style.display = 'block';
-                } else {
-                    moleculeImage.style.display = 'none';
-                }
-
-                // Update the Wikipedia link
-                const moleculeWikiLink = document.getElementById('moleculeWikiLink');
-                const moleculeWikiLinkText = document.getElementById('moleculeWikiLinkText');
-                if (data.content_urls && data.content_urls.desktop && data.content_urls.desktop.page) {
-                    moleculeWikiLink.href = data.content_urls.desktop.page;
-                    moleculeWikiLinkText.innerText = moleculeName; // Set the molecule name dynamically
-                    moleculeWikiLink.style.display = 'inline';
-                } else {
-                    moleculeWikiLink.style.display = 'none';
-                }
-            } catch (error) {
-                document.getElementById('moleculeWiki').innerText = 'Error fetching Wikipedia summary.';
-                document.getElementById('moleculeImage').style.display = 'none';
-                document.getElementById('moleculeWikiLink').style.display = 'none';
-            }
-        }
-
-        // Function to update the molecule
-        function updateMolecule(selectedKey) {
-            if (moleculeGroup) {
-                scene.remove(moleculeGroup);
-            }
-
-            const selectedMolecule = molecules[selectedKey];
-            moleculeGroup = createMolecule(selectedMolecule.atoms, selectedMolecule.bonds);
-            scene.add(moleculeGroup);
-
-            // Update molecule description
-            document.getElementById('moleculeName').innerText = selectedMolecule.name;
-            document.getElementById('moleculeDetails').innerText = selectedMolecule.details;
-            document.getElementById('moleculeBonds').innerText = `Number of bonds: ${selectedMolecule.bonds.length}`;
-
-            // Update the page title with the molecule name
-            document.title = `${selectedMolecule.name} - 3D Molecule Viewer`;
-
-            // Fetch Wikipedia summary and image
-            fetchWikipediaSummary(selectedMolecule.name.split(' ')[0]); // Use the first word of the molecule name
-
-            // Update the legend
-            updateLegend(selectedMolecule.atoms);
-        }
-
-        // Handle molecule selection
-        moleculeSelector.addEventListener('change', (event) => {
-            updateMolecule(event.target.value);
-        });
-
-        // Handle zoom slider
-        const zoomSlider = document.getElementById('zoomSlider');
-        zoomSlider.addEventListener('input', (event) => {
-            camera.position.z = event.target.value;
-        });
-
-        // Handle speed slider
-        const speedSlider = document.getElementById('speedSlider');
-        speedSlider.addEventListener('input', (event) => {
-            rotationSpeed = parseFloat(event.target.value);
-        });
-
-        // Handle font size slider
-        const fontSizeSlider = document.getElementById('fontSizeSlider');
-        fontSizeSlider.addEventListener('input', (event) => {
-            const newFontSize = parseInt(event.target.value, 10);
-
-            // Update all text labels in the molecule group
-            if (moleculeGroup) {
-                moleculeGroup.children.forEach((child) => {
-                    if (child.type === 'Sprite') {
-                        const labelText = child.userData.labelText || ""; // Retrieve the stored label text
-                        const newLabel = createTextLabel(labelText, newFontSize); // Create a new label with updated font size
-                        child.material.map = newLabel.material.map; // Update the texture
-                        child.scale.set(newLabel.scale.x, newLabel.scale.y, newLabel.scale.z); // Update the scale
-                    }
-                });
-            }
-        });
-
-        // Handle window resize
-        window.addEventListener('resize', () => {
-            const width = window.innerWidth;
-            const height = window.innerHeight;
-
-            // Update camera aspect ratio and projection matrix
-            camera.aspect = width / height;
-            camera.updateProjectionMatrix();
-
-            // Update renderer size
-            renderer.setSize(width, height);
-        });
-
-        // Initialize with the first molecule
-        updateMolecule(moleculeSelector.value);
-
-        // Animation loop
-        function animate() {
-            requestAnimationFrame(animate);
-            
-            // Rotate the entire molecule
-            if (moleculeGroup) {
-                moleculeGroup.rotation.x += rotationSpeed;
-                moleculeGroup.rotation.y += rotationSpeed;
-            }
-            
-            renderer.render(scene, camera);
-        }
-        
-        animate();
-
-        // Function to position the description box relative to the dropdown
-        function positionDescriptionBox() {
-            const menu = document.getElementById('menu');
-            const description = document.getElementById('description');
-
-            // Get the bounding box of the dropdown menu
-            const menuRect = menu.getBoundingClientRect();
-
-            // Position the description box below the dropdown menu
-            description.style.top = `${menuRect.bottom + 10}px`; // Add 10px gap
-        }
-
-        // Reposition the description box on window resize
-        window.addEventListener('resize', positionDescriptionBox);
-
-        // Initial positioning
-        positionDescriptionBox();
-
-        let randomizeInterval;
-
-        // Function to pick a random molecule
-        function pickRandomMolecule() {
-            const moleculeKeys = Object.keys(molecules);
-            const randomKey = moleculeKeys[Math.floor(Math.random() * moleculeKeys.length)];
-            moleculeSelector.value = randomKey; // Update the dropdown
-            updateMolecule(randomKey); // Update the molecule
-        }
-
-        // Handle the Randomize button
-        const randomizeButton = document.getElementById('randomizeButton');
-        randomizeButton.addEventListener('click', () => {
-            if (randomizeInterval) {
-                clearInterval(randomizeInterval); // Stop the interval if already running
-                randomizeInterval = null;
-                randomizeButton.innerText = 'Randomize'; // Update button text
-            } else {
-                pickRandomMolecule(); // Pick a random molecule immediately
-                randomizeInterval = setInterval(pickRandomMolecule, 10000); // Start interval to pick every 10 seconds
-                randomizeButton.innerText = 'Stop Randomize'; // Update button text
-            }
-        });
-    </script>
+  <noscript><p class="noscript">Molecule Viewer needs JavaScript and WebGL.</p></noscript>
+  <script type="module" src="js/main.js"></script>
 </body>
 </html>

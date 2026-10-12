@@ -1,0 +1,46 @@
+// The Standard Model's 17 fundamental particles. Masses from the Particle Data Group (rounded);
+// neutrino masses are known only to be tiny. col/row place each in the usual chart.
+export const PARTICLE_FAMILIES = {
+  quark: { name: 'Quarks', color: 0xb53cff },
+  lepton: { name: 'Leptons', color: 0x2b86ff },
+  boson: { name: 'Force carriers', color: 0xff8a1a },
+  scalar: { name: 'Higgs boson', color: 0x1fd37a },
+};
+
+export const PARTICLES = [
+  { key: 'u', symbol: 'u', name: 'Up quark', family: 'quark', col: 0, row: 0, charge: '+⅔', q: 2 / 3, mass: '2.2 MeV', spin: '½', found: '1968', colour: true,
+    where: 'Two in every proton, one in every neutron: nearly all the visible matter around you.' },
+  { key: 'c', symbol: 'c', name: 'Charm quark', family: 'quark', col: 1, row: 0, charge: '+⅔', q: 2 / 3, mass: '1.27 GeV', spin: '½', found: '1974', colour: true,
+    where: 'Made in particle collisions; decays in about a trillionth of a second.' },
+  { key: 't', symbol: 't', name: 'Top quark', family: 'quark', col: 2, row: 0, charge: '+⅔', q: 2 / 3, mass: '173 GeV', spin: '½', found: '1995', colour: true,
+    where: 'The heaviest known particle, about as heavy as a gold atom. It decays before it can join anything.' },
+  { key: 'd', symbol: 'd', name: 'Down quark', family: 'quark', col: 0, row: 1, charge: '−⅓', q: -1 / 3, mass: '4.7 MeV', spin: '½', found: '1968', colour: true,
+    where: 'One in every proton, two in every neutron.' },
+  { key: 's', symbol: 's', name: 'Strange quark', family: 'quark', col: 1, row: 1, charge: '−⅓', q: -1 / 3, mass: '93 MeV', spin: '½', found: '1968', colour: true,
+    where: 'Found in kaons from cosmic rays, which first puzzled physicists in 1947 by living strangely long.' },
+  { key: 'b', symbol: 'b', name: 'Bottom quark', family: 'quark', col: 2, row: 1, charge: '−⅓', q: -1 / 3, mass: '4.18 GeV', spin: '½', found: '1977', colour: true,
+    where: 'Made in colliders; its decays are studied for clues to why there is more matter than antimatter.' },
+  { key: 'e', symbol: 'e', name: 'Electron', family: 'lepton', col: 0, row: 2, charge: '−1', q: -1, mass: '0.511 MeV', spin: '½', found: '1897',
+    where: 'In every atom. Electricity is electrons moving; chemistry is electrons being shared.' },
+  { key: 'mu', symbol: 'μ', name: 'Muon', family: 'lepton', col: 1, row: 2, charge: '−1', q: -1, mass: '106 MeV', spin: '½', found: '1936',
+    where: 'A heavy electron made by cosmic rays: one or two pass through your hand every second.' },
+  { key: 'tau', symbol: 'τ', name: 'Tau', family: 'lepton', col: 2, row: 2, charge: '−1', q: -1, mass: '1.78 GeV', spin: '½', found: '1975',
+    where: 'The heaviest electron cousin, living for 0.3 trillionths of a second.' },
+  { key: 've', symbol: 'ν', sub: 'e', name: 'Electron neutrino', family: 'lepton', col: 0, row: 3, charge: '0', q: 0, mass: 'under 0.5 eV', spin: '½', found: '1956', ghost: true,
+    where: 'About 65 billion from the Sun pass through every square centimetre of you each second.' },
+  { key: 'vmu', symbol: 'ν', sub: 'μ', name: 'Muon neutrino', family: 'lepton', col: 1, row: 3, charge: '0', q: 0, mass: 'tiny, unmeasured', spin: '½', found: '1962', ghost: true,
+    where: 'Neutrinos change type as they travel, which proves they have some mass.' },
+  { key: 'vtau', symbol: 'ν', sub: 'τ', name: 'Tau neutrino', family: 'lepton', col: 2, row: 3, charge: '0', q: 0, mass: 'tiny, unmeasured', spin: '½', found: '2000', ghost: true,
+    where: 'The last matter particle to be seen directly, at Fermilab in 2000.' },
+  { key: 'g', symbol: 'g', name: 'Gluon', family: 'boson', col: 3.25, row: 0, charge: '0', q: 0, mass: '0', spin: '1', found: '1979', colour: true, wave: true,
+    where: 'Carries the strong force, holding quarks together inside every proton and neutron.' },
+  { key: 'gamma', symbol: 'γ', name: 'Photon', family: 'boson', col: 3.25, row: 1, charge: '0', q: 0, mass: '0', spin: '1', found: '1905–23', wave: true,
+    where: 'Light, radio and X-rays. Every electric and magnetic push and pull is carried by photons.' },
+  { key: 'Z', symbol: 'Z', name: 'Z boson', family: 'boson', col: 3.25, row: 2, charge: '0', q: 0, mass: '91.2 GeV', spin: '1', found: '1983', wave: true,
+    where: 'Carries the weak force, which lets the Sun burn and some nuclei decay.' },
+  { key: 'W', symbol: 'W', name: 'W boson', family: 'boson', col: 3.25, row: 3, charge: '±1', q: 1, mass: '80.4 GeV', spin: '1', found: '1983', wave: true,
+    where: 'The other carrier of the weak force: it turns a neutron into a proton in radioactive decay.' },
+  { key: 'H', symbol: 'H', name: 'Higgs boson', family: 'scalar', col: 4.5, row: 0, charge: '0', q: 0, mass: '125 GeV', spin: '0', found: '2012', wave: true,
+    where: 'A ripple in the Higgs field, which gives the other fundamental particles their mass. Found at CERN in 2012.' },
+];
+export const PARTICLE = Object.fromEntries(PARTICLES.map(p => [p.key, p]));
