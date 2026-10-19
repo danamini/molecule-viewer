@@ -473,7 +473,7 @@ function renderNucleus(level) {
   setSpecimen(`${el.name}-${level.A}`, `${level.protons} protons + ${level.neutrons} neutrons`, `A nucleus about ${fmt(nucleusFm(el), 1)} femtometres across`);
   const ratio = (atomSize(el) * 1e-12) / (nucleusFm(el) * 1e-15);
   $('#detailsBody').innerHTML = `
-    <p class="blurb">Almost all of the atom's mass, packed into a hundred-thousandth of its width. The protons repel each other; the strong force, reaching barely further than their neighbours, holds them anyway.</p>
+    <p class="blurb">Almost all of the atom's mass, packed into between a ten-thousandth and a hundred-thousandth of its width. The protons repel each other; the strong force, reaching barely further than their neighbours, holds them anyway.</p>
     <dl class="stats">
       <div><dt><span class="dot" style="color:#e8432a;background:currentColor"></span> Protons</dt><dd>${level.protons}</dd></div>
       <div><dt><span class="dot" style="color:#6f8fc4;background:currentColor"></span> Neutrons</dt><dd>${level.neutrons}</dd></div>
@@ -482,7 +482,7 @@ function renderNucleus(level) {
     </dl>
     <div class="chips"><button type="button" class="chip go" data-dive="proton">${ZOOM_IC}Zoom into a proton</button><button type="button" class="chip go" data-dive="neutron">${ZOOM_IC}Zoom into a neutron</button></div>
     <p class="note">Or click any one of them.</p>
-    <p class="note">${el.name}'s ${el.predicted || el.Z > 82 ? 'longest-lived' : 'commonest'} isotope. Nucleons are not hard balls in fixed places: this shows how many there are, not where they sit.</p>`;
+    <p class="note">${el.name}'s ${el.predicted || el.Z > 82 || el.symbol === 'Tc' || el.symbol === 'Pm' ? 'longest-lived' : 'commonest'} isotope. Nucleons are not hard balls in fixed places: this shows how many there are, not where they sit.</p>`;
 }
 
 function renderNucleon(level) {
@@ -492,8 +492,8 @@ function renderNucleon(level) {
   $('#detailsBody').innerHTML = `
     <ul class="quarks">${level.flavours.map(f => `<li><b>${f === 'up' ? 'u' : 'd'}</b>${f}<br><small>${q(f)} charge</small></li>`).join('')}</ul>
     <p class="blurb">Three quarks, ${proton ? 'two up and one down, so the charges add to +1' : 'one up and two down, so the charges cancel to zero'}. They are never seen alone: pull one away and the energy makes new quarks instead.</p>
-    <p class="blurb">The quarks' own masses are only about 1% of the ${level.nucleon}'s. The rest is the energy of the gluon field binding them, the flickering cloud you see here.</p>
-    ${proton ? '' : '<p class="blurb">Inside a nucleus a neutron can last for ever; on its own it decays in about 15 minutes, into a proton, an electron and an antineutrino.</p>'}
+    <p class="blurb">The quarks' own masses are only about 1% of the ${level.nucleon}'s. The rest is energy: the quarks’ motion and the gluon field binding them, the flickering cloud you see here.</p>
+    ${proton ? '' : '<p class="blurb">Inside a nucleus a neutron can last for ever; on its own it lasts about 15 minutes on average (a half-life of about 10), then decays into a proton, an electron and an antineutrino.</p>'}
     <p class="hint-line">${ZOOM_IC}<span>Keep scrolling to fall to the Planck length, twenty powers of ten further down.</span></p>
     <div class="chips"><button type="button" class="chip link" data-go="particles">See all 17 fundamental particles</button></div>
     <p class="note">The colours are the quarks' colour charge, which they keep swapping as they trade gluons. It has nothing to do with real colour. As far as anyone has measured, quarks have no size at all.</p>`;
@@ -502,19 +502,19 @@ function renderNucleon(level) {
 function renderPlanck() {
   setSpecimen('Planck length', `1.6 × ${pow10(-35)} m`, 'A hundred billion billion times smaller than a proton');
   $('#detailsBody').innerHTML = `
-    <p class="blurb">The smallest length physics can talk about. Down here our two best theories, quantum mechanics and gravity, would both matter at once, and no one yet knows how they fit together.</p>
+    <p class="blurb">The length where today’s physics stops working. Down here our two best theories, quantum theory and general relativity (our theory of gravity), would both matter at once, and no one yet knows how they fit together.</p>
     <p class="blurb">Nothing has ever been measured at this scale. The best particle colliders reach about ${pow10(-19)} metres, sixteen powers of ten short.</p>
     <dl class="stats">
       <div><dt>Length</dt><dd>1.6<small>× ${pow10(-35)} m</small></dd></div>
       <div><dt>Below a proton</dt><dd>${pow10(20)}<small>×</small></dd></div>
     </dl>
-    <p class="note">What you see is a guess, not a picture: John Wheeler's idea of ‘quantum foam’, space itself bubbling. Some theories say there is no smaller distance at all. This is the bottom.</p>`;
+    <p class="note">What you see is a guess, not a picture: John Wheeler's idea of ‘quantum foam’, space itself bubbling. Some theories say there is no smaller distance at all. Here, at least, our physics stops.</p>`;
 }
 
 function renderSnowflake(level) {
   setSpecimen('Snowflake', 'H<sub>2</sub>O, frozen', 'About 3 millimetres across, six arms 60° apart');
   $('#detailsBody').innerHTML = `
-    <p class="blurb">Every snowflake has six arms, set 60° apart. The weather doesn't choose that angle: it comes from how water molecules hold on to each other. Zoom in and watch the same hexagon appear, ten million times smaller.</p>
+    <p class="blurb">Star-shaped snowflakes have six arms, set 60° apart. The weather doesn't choose that angle: it comes from how water molecules hold on to each other. Zoom in and watch the same hexagon appear, ten million times smaller.</p>
     <div class="chips">${toggleChip('symBtn', 'Show the 60° symmetry', level.showSymmetry !== false)}</div>
     <dl class="stats">
       <div><dt>Across</dt><dd>3<small>mm</small></dd></div>
@@ -536,7 +536,7 @@ function renderTable(level) {
   const view = level?.view || 'family';
   const families = Object.keys(FAMILY_COLORS);
   $('#detailsBody').innerHTML = `
-    <p class="blurb">Every atom in the universe is one of these 118. Each row adds a shell of electrons; each column shares the same outer electrons, and so behaves alike.</p>
+    <p class="blurb">Every atom in the universe is one of these 118. Each row adds a shell of electrons; each column has similar outer electrons, and so behaves alike.</p>
     <div><p class="label-line">Show the table by</p>
     <div class="chips views">${Object.entries(TABLE_VIEWS).map(([k, v]) => `<button type="button" class="chip" data-view="${k}" aria-pressed="${k === view}">${esc(v.label)}</button>`).join('')}</div></div>
     <p class="blurb view-note" id="viewNote">${esc(TABLE_VIEWS[view].note)}</p>
@@ -579,7 +579,7 @@ const ORBITALS = {
   s: { shape: 'sphere', count: 1, max: 2, note: 's orbitals are spheres: the electron is equally likely in every direction.' },
   p: { shape: 'dumbbell', count: 3, max: 6, note: 'p orbitals are dumbbells, three of them at right angles (along x, y and z), with the nucleus in the gap.' },
   d: { shape: 'clover', count: 5, max: 10, note: 'd orbitals: four are four-leaf clovers, the fifth a dumbbell with a ring round its waist. They fill in the transition metals.' },
-  f: { shape: 'many lobes', count: 7, max: 14, note: 'f orbitals have six or eight lobes. They fill in the lanthanides and actinides, the two rows below the table.' },
+  f: { shape: 'many lobes', count: 7, max: 14, note: 'f orbitals mostly have six or eight lobes; one has two lobes and two rings. They fill in the lanthanides and actinides, the two rows below the table.' },
 };
 function orbitalShape(l) {
   const lobe = (a, len, w) => `<ellipse cx="30" cy="${30 - len / 2}" rx="${w}" ry="${len / 2}" transform="rotate(${a} 30 30)"/>`;
@@ -601,6 +601,7 @@ function bondLine(sym) {
   if (NOBLE.has(sym)) return `Its outer shell is full, so it hardly bonds at all.`;
   const b = TYPICAL_BONDS[sym];
   if (!b) return `${outer} electron${outer > 1 ? 's' : ''} in its outer shell (highlighted).`;
+  if (sym === 'B') return '3 outer electrons (highlighted). It shares all 3, so it usually forms 3 bonds, ending up with 6, not 8.';
   const full = sym === 'H' ? 2 : 8;
   return `${outer} outer electron${outer > 1 ? 's' : ''} (highlighted). It needs ${b} more to make ${full}, so it usually forms ${b} bond${b > 1 ? 's' : ''}.`;
 }
@@ -644,7 +645,7 @@ const shellLine = sym => {
 function renderParticles() {
   setSpecimen('Particle zoo', '17 fundamental particles', 'Everything known to be made of nothing smaller');
   $('#detailsBody').innerHTML = `
-    <p class="blurb">The Standard Model: every particle known to have no parts. Matter is quarks and leptons, in three generations, each heavier than the last; only the first makes up ordinary atoms. Forces are carried by bosons, and the Higgs field gives the others their mass.</p>
+    <p class="blurb">The Standard Model: every particle known to have no parts. Matter is quarks and leptons, in three generations; only the first makes up ordinary atoms. Forces are carried by bosons, and the Higgs field gives the quarks, the charged leptons and the W and Z their mass.</p>
     <ul class="families" aria-label="Families: point to highlight">${Object.entries(PARTICLE_FAMILIES).map(([k, f]) => `
       <li><button type="button" data-family="${k}"><span class="swatch" style="background:${hex(f.color)}"></span>${esc(f.name)}<small>${PARTICLES.filter(p => p.family === k).length}</small></button></li>`).join('')}
     </ul>
@@ -661,6 +662,7 @@ function renderParticle(level) {
   const fam = PARTICLE_FAMILIES[p.family];
   setSpecimen(p.name, `${esc(p.symbol)}${p.sub ? `<sub>${esc(p.sub)}</sub>` : ''}, ${fam.name.toLowerCase().replace(/s$/, '')}`, `Charge ${p.charge}, spin ${p.spin}, found ${p.found}`);
   const seen = p.ghost ? 'A neutrino barely touches anything: the faint line is its path straight through.'
+    : p.key === 'H' ? 'A ripple in the Higgs field, which fills all of space. Particles that feel the field get their mass from it.'
     : p.wave ? 'A force carrier: what you see are ripples spreading out, the way it passes a force from one particle to another.'
       : p.colour ? 'The flicker around it is colour charge, the strong force’s version of electric charge.'
         : 'The lines are its electric field reaching out in every direction. The fizz around it is short-lived particle pairs that partly screen its charge.';
@@ -675,7 +677,7 @@ function renderParticle(level) {
     <p class="blurb">As far as anyone has measured, it is a point: no size and nothing inside, down to about ${pow10(-18)} metres. ${seen}</p>
     <p class="hint-line">${ZOOM_IC}<span>Keep scrolling to fall to the Planck length.</span></p>
     <div class="chips"><button type="button" class="chip link" data-go="particles">All 17 particles</button></div>
-    <p class="note">Masses are in electronvolts, physicists' energy unit (E = mc²): a proton is 938 MeV. Spin is quantum: not a ball turning, but it makes ${p.q ? 'charged particles tiny magnets' : 'particles behave as if they had angular momentum'}.</p>`;
+    <p class="note">Masses are in electronvolts, physicists' energy unit (E = mc²): a proton is 938 MeV. ${p.spin === '0' ? 'The Higgs has spin 0: none at all.' : `Spin is quantum: real angular momentum, though nothing is turning${p.q ? ', and it makes charged particles tiny magnets' : ''}.`}</p>`;
 }
 
 function renderThing(level) {
@@ -1132,7 +1134,7 @@ const CHAPTERS = [
   { size: '3 mm', title: 'Things you can hold', line: 'A snowflake, a grain of salt, a diamond. Each shape is a clue to what is inside.', c: '#cfe8ff', things: true },
   { size: '1 nm', title: 'Molecules', line: 'Atoms joined into shapes: water, caffeine, the letters of DNA. Real 3D structures, and any of PubChem’s millions.', c: '#7cc4ff', go: 'caffeine' },
   { size: '0.3 nm', title: 'Elements', line: 'Every molecule is built from just 118 kinds of atom.', c: '#f2b45a', go: 'table', elements: ['H', 'C', 'O', 'Fe', 'Au', 'U'] },
-  { size: `${pow10(-15)} m`, title: 'Particles', line: 'Every atom is built from a few of 17 particles that have no parts at all.', c: '#b53cff', go: 'particles', particles: ['u', 'd', 'e', 'gamma', 'g', 'H'] },
+  { size: `${pow10(-15)} m`, title: 'Particles', line: 'Every atom is built from a few of 17 particles with, as far as anyone can tell, no parts at all.', c: '#b53cff', go: 'particles', particles: ['u', 'd', 'e', 'gamma', 'g', 'H'] },
   { size: `${pow10(-35)} m`, title: 'The Planck length', line: 'Below this, nobody knows. Physics, as we have it, runs out.', c: '#b48cff', guided: true },
 ];
 function renderChapters() {
@@ -1179,7 +1181,7 @@ $('.mark').addEventListener('click', e => { e.preventDefault(); showIntro(); });
 const GUIDE = [
   ['A snowflake, about 3 millimetres across. Six arms, each 60° from the next. Why six? Let’s look inside.', 9000],
   ['Ice. Water molecules holding on to each other in rings of six. The snowflake’s hexagon starts here, ten million times smaller.', 10000],
-  ['One water molecule: an oxygen and two hydrogens, bent at 104.5°. That bend is why the rings form.', 9000],
+  ['One water molecule: an oxygen and two hydrogens, bent at 104.5°, with two lone pairs opposite: four arms pointing to a tetrahedron’s corners. That is why the rings form.', 9000],
   ['The oxygen atom. Its eight electrons are not little planets but clouds of probability: each point is somewhere one might be found.', 10000],
   ['Its nucleus: eight protons and eight neutrons, about fifty thousand times smaller than the atom around it.', 9000],
   ['A proton. Three quarks, held by gluons. Almost all of its mass is the energy of that binding.', 10000],

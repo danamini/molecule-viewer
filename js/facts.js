@@ -14,7 +14,7 @@ export const WHERE = {
   Mg: 'The centre of every chlorophyll molecule; light alloys for bikes and laptops.',
   Al: 'Drinks cans and kitchen foil. The commonest metal in Earth’s crust.',
   Si: 'Sand, quartz and every computer chip.',
-  P: 'The backbone of DNA, the energy molecule ATP, your bones, and match heads.',
+  P: 'The backbone of DNA, the energy molecule ATP, your bones, and the striking strip on a matchbox.',
   S: 'The smell of struck matches and rotten eggs; part of two amino acids.',
   Cl: 'Table salt and swimming pools.',
   Ar: 'About 1% of the air you are breathing.',
@@ -44,5 +44,5 @@ export const WHERE = {
   U: 'The fuel of nuclear power stations.',
   Pu: 'Spacecraft power: Voyager and the Curiosity rover run on its heat.',
   Am: 'Smoke detectors.',
-  Og: 'Only a handful of atoms ever made, each gone in under a millisecond.',
+  Og: 'Only a handful of atoms ever made, each gone in about a thousandth of a second.',
 };

@@ -157,7 +157,7 @@ async function tileAtlas() {
 // Ways to look at the table: each gives every element a colour, a height (tiles rise as bars) and
 // whether it is lit or dimmed. Human body figures are percent by mass.
 const BODY = { O: 65, C: 18.5, H: 9.5, N: 3.2, Ca: 1.5, P: 1.0, K: 0.4, S: 0.3, Na: 0.2, Cl: 0.2, Mg: 0.1,
-  Fe: 0.006, F: 0.0037, Zn: 0.0032, Si: 0.002, Cu: 0.0001, Se: 0.00002, Mn: 0.00002, I: 0.00002, Mo: 0.00001, Co: 0.00002, Cr: 0.00002 };
+  Fe: 0.006, F: 0.0037, Zn: 0.0032, Si: 0.002, Cu: 0.0001, Se: 0.00002, Mn: 0.00002, I: 0.00002, Mo: 0.00001, Co: 0.000002, Cr: 0.0000024 };
 const GASES = new Set(['H', 'He', 'N', 'O', 'F', 'Ne', 'Cl', 'Ar', 'Kr', 'Xe', 'Rn']);
 const LIQUIDS = new Set(['Br', 'Hg']);
 const ramp = (t, stops) => {
@@ -168,7 +168,7 @@ const ramp = (t, stops) => {
 export const TABLE_VIEWS = {
   family: { label: 'Families', note: 'Coloured by family: elements in one family share their outer electrons, and so their chemistry.',
     of: el => ({ color: new THREE.Color(FAMILY_COLORS[el.family]).offsetHSL(0, 0.4, -0.1), rise: 0, lit: true }) },
-  mass: { label: 'Weight', note: 'Height and colour by atomic mass: from hydrogen, 1, to oganesson, 294 times heavier.',
+  mass: { label: 'Weight', note: 'Height and colour by atomic mass: from hydrogen, 1, to oganesson, about 290 times heavier.',
     of: el => ({ color: ramp(el.mass / 294, [0x3b6fd8, 0x7cc4ff, 0xf2b45a, 0xff5a3c]), rise: 0.05 + 2.4 * el.mass / 294, lit: true }) },
   state: { label: 'Gas, liquid, solid', note: 'At room temperature. The eleven gases float up; only bromine and mercury are liquid.',
     of: el => GASES.has(el.symbol) ? { color: new THREE.Color(0x7cc4ff), rise: 1.1, lit: true }
@@ -186,9 +186,9 @@ export const TABLE_VIEWS = {
     } },
   sizes: { label: 'Atom sizes', note: 'Each tile scaled to its atom’s true relative size (covalent radius). They shrink across each row as the nucleus pulls harder, and swell down each column as shells are added: caesium is eight times wider than hydrogen.',
     of: el => el.Z <= 96
-      ? { color: new THREE.Color(FAMILY_COLORS[el.family]).offsetHSL(0, 0.3, -0.06), rise: 0.1, lit: true, scale: 0.22 + 0.78 * el.covalent / MAX_COV }
+      ? { color: new THREE.Color(FAMILY_COLORS[el.family]).offsetHSL(0, 0.3, -0.06), rise: 0.1, lit: true, scale: el.covalent / MAX_COV } // true proportion: caesium's tile eight times hydrogen's
       : { color: new THREE.Color(0x283044), rise: 0, lit: false, scale: 0.22 } },
-  made: { label: 'Made by people', note: 'Everything after plutonium has only ever been made in reactors and particle accelerators, often a few atoms at a time.',
+  made: { label: 'Made by people', note: 'Everything after plutonium has only ever been made by people, in reactors, accelerators and bomb tests, often a few atoms at a time.',
     of: el => el.Z > 94 ? { color: ramp((el.Z - 95) / 23, [0xe58cff, 0xff5a8a]), rise: 0.25 + (el.Z - 95) * 0.04, lit: true }
       : { color: new THREE.Color(0x283044), rise: 0, lit: false } },
 };

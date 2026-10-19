@@ -13,7 +13,7 @@ export const PARTICLES = [
   { key: 'c', symbol: 'c', name: 'Charm quark', family: 'quark', col: 1, row: 0, charge: '+⅔', q: 2 / 3, mass: '1.27 GeV', spin: '½', found: '1974', colour: true,
     where: 'Made in particle collisions; decays in about a trillionth of a second.' },
   { key: 't', symbol: 't', name: 'Top quark', family: 'quark', col: 2, row: 0, charge: '+⅔', q: 2 / 3, mass: '173 GeV', spin: '½', found: '1995', colour: true,
-    where: 'The heaviest known particle, about as heavy as a gold atom. It decays before it can join anything.' },
+    where: 'The heaviest known elementary particle, about as heavy as a tungsten atom. It decays before it can join anything.' },
   { key: 'd', symbol: 'd', name: 'Down quark', family: 'quark', col: 0, row: 1, charge: '−⅓', q: -1 / 3, mass: '4.7 MeV', spin: '½', found: '1968', colour: true,
     where: 'One in every proton, two in every neutron.' },
   { key: 's', symbol: 's', name: 'Strange quark', family: 'quark', col: 1, row: 1, charge: '−⅓', q: -1 / 3, mass: '93 MeV', spin: '½', found: '1968', colour: true,
@@ -37,10 +37,10 @@ export const PARTICLES = [
   { key: 'gamma', symbol: 'γ', name: 'Photon', family: 'boson', col: 3.25, row: 1, charge: '0', q: 0, mass: '0', spin: '1', found: '1905–23', wave: true,
     where: 'Light, radio and X-rays. Every electric and magnetic push and pull is carried by photons.' },
   { key: 'Z', symbol: 'Z', name: 'Z boson', family: 'boson', col: 3.25, row: 2, charge: '0', q: 0, mass: '91.2 GeV', spin: '1', found: '1983', wave: true,
-    where: 'Carries the weak force, which lets the Sun burn and some nuclei decay.' },
+    where: 'The neutral carrier of the weak force: it lets neutrinos bounce off matter without changing type.' },
   { key: 'W', symbol: 'W', name: 'W boson', family: 'boson', col: 3.25, row: 3, charge: '±1', q: 1, mass: '80.4 GeV', spin: '1', found: '1983', wave: true,
-    where: 'The other carrier of the weak force: it turns a neutron into a proton in radioactive decay.' },
+    where: 'The other carrier of the weak force: it lets the Sun burn and turns a neutron into a proton in radioactive decay.' },
   { key: 'H', symbol: 'H', name: 'Higgs boson', family: 'scalar', col: 4.5, row: 0, charge: '0', q: 0, mass: '125 GeV', spin: '0', found: '2012', wave: true,
-    where: 'A ripple in the Higgs field, which gives the other fundamental particles their mass. Found at CERN in 2012.' },
+    where: 'A ripple in the Higgs field, which gives quarks, electrons and the W and Z their mass. Found at CERN in 2012.' },
 ];
 export const PARTICLE = Object.fromEntries(PARTICLES.map(p => [p.key, p]));

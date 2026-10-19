@@ -4,8 +4,8 @@
 Each molecule's atoms, bonds and bond orders come from PubChem's computed 3D
 conformer (PUG REST, record_type=3d); its formula, weight and IUPAC name from
 PubChem's properties. Buckminsterfullerene has no PubChem conformer, so its
-truncated icosahedron is computed here (C-C 1.40 A in hexagon-hexagon bonds,
-1.45 A in pentagons).
+truncated icosahedron is computed here (a regular truncated icosahedron,
+every C-C bond 1.42 A; real C60 has about 1.39 A between two hexagons and 1.45 A on a pentagon).
 
 Run:  python3 tools/build_library.py   (writes molecules.js at the repo root)
 """
@@ -52,7 +52,7 @@ LIBRARY = [
     ("ibuprofen", "Everyday", "ibuprofen", "Ibuprofen", "Ibuprofen",
      "Blocks the enzymes that make inflammatory prostaglandins. Developed at Boots in the 1960s."),
     ("glucose", "Everyday", "glucose", "Glucose", "Glucose",
-     "A six-carbon sugar that folds into a ring. The fuel your brain burns almost exclusively."),
+     "A six-carbon sugar that folds into a ring. The brain’s main fuel, along with ketones when you fast."),
     ("sucrose", "Everyday", "sucrose", "Sucrose", "Sucrose",
      "Table sugar: a glucose and a fructose ring joined by a single oxygen bridge."),
     ("vanillin", "Everyday", "vanillin", "Vanillin", "Vanillin",
@@ -62,7 +62,7 @@ LIBRARY = [
     ("menthol", "Everyday", "menthol", "Menthol", "Menthol",
      "Switches on TRPM8, the nerve's cold sensor, which is why mint feels cool without being cold."),
     ("citric-acid", "Everyday", "citric acid", "Citric acid", "Citric_acid",
-     "The sour of lemons, and a step in the cycle every cell uses to release energy."),
+     "The sour of lemons, and a step in the cycle most cells use to release energy."),
     ("vitamin-c", "Everyday", "ascorbic acid", "Vitamin C", "Vitamin_C",
      "Ascorbic acid. Humans lost the ability to make it, so a diet without it ends in scurvy."),
     ("nicotine", "Everyday", "nicotine", "Nicotine", "Nicotine",
@@ -85,11 +85,11 @@ LIBRARY = [
     ("testosterone", "Body and brain", "testosterone", "Testosterone", "Testosterone",
      "A steroid hormone: four fused carbon rings, like all steroids, with small changes that mean everything."),
     ("estradiol", "Body and brain", "estradiol", "Oestradiol", "Estradiol",
-     "The main oestrogen. Compare it with testosterone: the rings are the same, the details are not."),
+     "The main oestrogen. Compare it with testosterone: the same four-ring frame, but here the first ring is flat and aromatic."),
     ("cholesterol", "Body and brain", "cholesterol", "Cholesterol", "Cholesterol",
      "Stiffens every animal cell membrane and is the starting material for steroid hormones."),
     ("retinal", "Body and brain", "retinal", "Retinal", "Retinal",
-     "The molecule that lets you see. A photon flips its chain from bent to straight, and a nerve fires."),
+     "The molecule that lets you see. A photon flips its chain from bent to straight, and a nerve signal begins."),
     ("glycine", "Body and brain", "glycine", "Glycine", "Glycine",
      "The smallest amino acid: its side chain is a single hydrogen."),
     ("tryptophan", "Body and brain", "tryptophan", "Tryptophan", "Tryptophan",
@@ -107,7 +107,7 @@ LIBRARY = [
      "DNA's C. Adding a methyl group to it is one way cells switch genes off."),
 
     ("penicillin", "Medicine", "penicillin G", "Penicillin G", "Benzylpenicillin",
-     "Noticed by Alexander Fleming in 1928. Its strained four-membered ring breaks open inside bacterial cell walls."),
+     "Noticed by Alexander Fleming in 1928. Its strained four-membered ring springs open onto the enzyme that builds bacterial cell walls, jamming it."),
     ("morphine", "Medicine", "morphine", "Morphine", "Morphine",
      "Isolated from the opium poppy in the early 1800s; still a standard against severe pain."),
     ("quinine", "Medicine", "quinine", "Quinine", "Quinine",
@@ -128,9 +128,9 @@ LIBRARY = [
     ("buckminsterfullerene", "Shapes and materials", None, "Buckminsterfullerene", "Buckminsterfullerene",
      "Sixty carbons in the pattern of a football: 12 pentagons, 20 hexagons. Found in 1985; Nobel Prize 1996."),
     ("epoxy", "Shapes and materials", "bisphenol A diglycidyl ether", "Epoxy resin", "Bisphenol_A_diglycidyl_ether",
-     "The building block of epoxy: the hard black plastic around chips. Mixed with a hardener, millions of these link into one solid web."),
+     "The commonest building block of epoxy glues and coatings. Mixed with a hardener, millions of these link into one solid web."),
     ("isoprene", "Shapes and materials", "isoprene", "Isoprene", "Isoprene",
-     "The unit of natural rubber. Rubber trees chain thousands of them into long, tangled, springy molecules."),
+     "The repeating unit of natural rubber: thousands of them in long, tangled, springy chains."),
     ("beta-carotene", "Shapes and materials", "beta-carotene", "Beta-carotene", "Beta-Carotene",
      "A long chain of alternating single and double bonds that absorbs blue light, so carrots look orange."),
 ]
@@ -231,9 +231,9 @@ def centre(atoms):
 
 
 def quartz():
-    # alpha-quartz, P3(2)21, a = 4.913 A, c = 5.405 A (Levien, Prewitt and Weidner 1980); the unit cell's
+    # alpha-quartz, P3(2)21, a = 4.916 A, c = 5.405 A (Levien, Prewitt and Weidner 1980); the unit cell's
     # 3 Si and 6 O generated from Si x = 0.4697 and O (0.4135, 0.2669, 0.1191)
-    a, c = 4.913, 5.405
+    a, c = 4.916, 5.405
     si = [(0, 0.4697, 2 / 3), (0.4697, 0, 0), (0.5303, 0.5303, 1 / 3)]
     o = [(0.1466, 0.7331, 0.8809), (0.2669, 0.4135, 0.54757), (0.4135, 0.2669, 0.1191),
          (0.5865, 0.8534, 0.21423), (0.7331, 0.1466, 0.78577), (0.8534, 0.5865, 0.45243)]
@@ -288,7 +288,7 @@ def graphene():
 def ice(seed=7):
     """Hexagonal ice (ice Ih) seen down its six-fold c axis, a slab three bilayers thick.
 
-    Oxygens sit on a wurtzite lattice (a = 4.518 A, c = 7.356 A near -20 C; O-O = 3c/8 = 2.76 A).
+    Oxygens sit on a wurtzite lattice (a = 4.518 A, c = 7.356 A close to 0 C; O-O = 3c/8 = 2.76 A).
     Hydrogens follow the Bernal-Fowler ice rules: two on every oxygen, one on every O-O link, chosen at
     random as in real ice. Bonds of order -1 are the hydrogen bonds H...O. Also returns the six-membered
     rings of each bilayer, the hexagons the snowflake's symmetry comes from.
@@ -440,8 +440,8 @@ def silicon():
 
 CRYSTALS = [
     ("quartz", quartz, "Quartz", "Quartz", "SiO2", 60.08,
-     "α-quartz: every silicon sits in a tetrahedron of four oxygens, and the tetrahedra spiral up the crystal in one direction. That twist is why a squeezed quartz crystal makes a voltage, and why it keeps time in watches.",
-     "α-quartz lattice, a = 4.913 Å, c = 5.405 Å (Levien, Prewitt and Weidner, 1980)"),
+     "α-quartz: every silicon sits in a tetrahedron of four oxygens, and the tetrahedra spiral up the crystal in one direction. That twist leaves the crystal with no centre of symmetry, so squeezing it makes a voltage, which is how it keeps time in watches.",
+     "α-quartz lattice, a = 4.916 Å, c = 5.405 Å (Levien, Prewitt and Weidner, 1980)"),
     ("diamond", diamond, "Diamond", "Diamond", "C", 12.011,
      "Every carbon bonded to four others in perfect tetrahedra, in all directions at once. No weak plane to slide along: the hardest natural material.",
      "Diamond cubic lattice, a = 3.567 Å"),
@@ -467,13 +467,13 @@ CRYSTALS = [
      "Its oxide forms a film a few atoms thick that heals itself when scratched. That film is what makes stainless steel stainless.",
      "Body-centred cubic lattice, a = 2.885 Å"),
     ("nickel", nickel, "Nickel", "Nickel", "Ni", 58.693,
-     "Tough and corrosion-resistant. In stainless steel it holds the iron in a face-centred crystal, which is why most stainless cutlery is not magnetic.",
+     "Tough and corrosion-resistant. In stainless steel it holds the iron in a face-centred crystal, which is why 18/10 stainless steel, used for good cutlery and sinks, is not magnetic.",
      "Face-centred cubic lattice, a = 3.524 Å"),
     ("silver", silver, "Silver", "Silver", "Ag", 107.87,
      "The best electrical conductor of any element, its atoms packed the same way as gold's.",
      "Face-centred cubic lattice, a = 4.086 Å"),
     ("silicon", silicon, "Silicon", "Silicon", "Si", 28.085,
-     "The crystal inside every computer chip: silicon arranged exactly like diamond, grown so pure that only about one atom in a billion is anything else.",
+     "The crystal inside every computer chip: silicon arranged exactly like diamond, refined until stray atoms are about one in a billion, then laced with traces of boron or phosphorus on purpose.",
      "Diamond cubic lattice, a = 5.431 Å"),
     ("ice", ice, "Ice", "Ice_Ih", "H2O", 18.015,
      "Hexagonal ice. Each water molecule holds four neighbours by hydrogen bonds (dashed), and the bonds close into rings of six. Look down the crystal and the rings line up into hexagonal channels.",
