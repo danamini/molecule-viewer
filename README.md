@@ -3,7 +3,7 @@
 **[Open the viewer](https://danamini.github.io/molecule-viewer/)**
 
 An interactive 3D explorer of what things are made of. Start with something you could hold (a snowflake,
-a grain of salt, a Z80 processor) and zoom in: its material, its molecules, their atoms, the nucleus, a
+a grain of salt, a computer chip) and zoom in: its material, its molecules, their atoms, the nucleus, a
 proton's quarks, and finally the Planck length. Thirty-two powers of ten in one continuous zoom, with
 the scale kept human all the way down.
 
@@ -23,12 +23,13 @@ the scale kept human all the way down.
   molecules, elements, particles, the Planck length). *Start the journey* is a captioned descent from a
   snowflake to the bottom of physics that shows why snowflakes have six arms.
 - **Journeys from real things.** A snowflake, a grain of salt, a diamond, a quartz crystal on its rock,
-  pencil lead, a gold ring, a modern computer chip, a Zilog Z80 and a cup of coffee, lit as studio
-  objects. Composite things carry labelled hotspots: zoom into the chip's bond wire and land in gold, the
+  pencil lead, a gold ring, a computer chip (a Zilog Z80 on its circuit board) and a cup of coffee, lit as
+  studio objects. Composite things carry labelled hotspots: zoom into the chip's bond wire and land in gold, the
   coffee's caffeine and land in the molecule. Each hotspot shows the elements its part contains, and a
   part made of several materials (18/8 stainless steel, the chip's silica-filled package, 18-carat gold)
   opens a mixture view with each material and its share, side by side.
-- **The Z80, all the way down.** The 40-pin package, then the die with its blocks labelled (decode PLA,
+- **The computer chip, all the way down.** A Zilog Z80 on its board: the 40-pin package, then the die
+  with its blocks labelled (decode PLA,
   control, timing, incrementer, register file, ALU), then one NMOS transistor cut open and switching,
   then each of its materials.
 - **Real molecules.** 53 molecules with PubChem's computed 3D coordinates and 13 crystal lattices built
@@ -50,7 +51,7 @@ the scale kept human all the way down.
 - **The particle zoo.** The Standard Model's 17 particles, each with mass, charge, spin and an icon.
 - **Surprise me and Tour** jump or tour at random through everything. Keyboard throughout (`?` lists the
   keys), phone layout, picture export, and every place has a shareable address
-  (`#caffeine`, `#element-Fe`, `#particle-mu`, `#thing-z80`, `#cid-2519`).
+  (`#caffeine`, `#element-Fe`, `#particle-mu`, `#thing-chip`, `#cid-2519`).
 
 ## Run it
 

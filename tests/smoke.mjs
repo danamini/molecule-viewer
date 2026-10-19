@@ -160,7 +160,7 @@ await test('particle zoo', async page => {
 
 await test('every journey opens and zooms in', async page => {
   const { THINGS } = await (async () => { await go(page, 'caffeine', 1500); return page.evaluate(async () => ({ THINGS: (await import('/js/things.js')).THINGS.map(t => t.key) })); })();
-  expect(THINGS.length >= 9, `${THINGS.length} journeys`);
+  expect(THINGS.length >= 8, `${THINGS.length} journeys`);
   for (const k of THINGS) {
     await go(page, `thing-${k}`, 2500);
     await page.keyboard.press('Enter');
@@ -171,7 +171,7 @@ await test('every journey opens and zooms in', async page => {
 });
 
 await test('composite parts lead to their own materials', async page => {
-  const cases = [['chip', [['Silicon die', 'Silicon'], ['Gold bond wire', 'Gold'], ['Copper trace', 'Copper'], ['Black package', 'Black package'], ['Circuit board', 'Circuit board']]],
+  const cases = [['chip', [['Gold bond wire', 'Gold'], ['Copper trace', 'Copper'], ['Black package', 'Black package'], ['Circuit board', 'Circuit board']]],
     ['coffee', [['Caffeine', 'Caffeine'], ['Water', 'Water']]], ['pencil', [['Eraser', 'Isoprene'], ['Graphite tip', 'Graphene']]]];
   for (const [thing, parts] of cases) {
     await go(page, `thing-${thing}`);
@@ -180,13 +180,13 @@ await test('composite parts lead to their own materials', async page => {
       await wait(page, 2500);
       expect(await title(page) === expected, `${thing} / ${label} should open ${expected}, got ${await title(page)}`);
       await page.keyboard.press('Escape');
-      await wait(page, 2000);
+      await wait(page, 3000);
     }
   }
 });
 
 await test('Z80: package, die, transistor, material', async page => {
-  await go(page, 'thing-z80');
+  await go(page, 'thing-chip');
   expect(await clickHotspot(page, 'Silicon die'), 'die hotspot');
   await wait(page, 2700);
   expect(await title(page) === 'The Z80 die', 'die level');
@@ -200,7 +200,7 @@ await test('Z80: package, die, transistor, material', async page => {
 });
 
 await test('hotspots show what each part is made of', async page => {
-  await go(page, 'thing-z80');
+  await go(page, 'thing-chip');
   const badges = await page.evaluate(() => Object.fromEntries([...document.querySelectorAll('.hotspot')].map(h => [h.querySelector('span').textContent, [...h.querySelectorAll('.el-badge')].map(b => b.textContent).join(' ')])));
   expect(badges['Gold bond wire'] === 'Au', `bond wire badges: ${badges['Gold bond wire']}`);
   expect(badges['Black package'] === 'C H O Si', `package badges: ${badges['Black package']}`);

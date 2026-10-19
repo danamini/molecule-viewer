@@ -204,152 +204,6 @@ function goldRing() {
   return g;
 }
 
-// A decapped processor on its board: the iridescent silicon die (cache arrays, logic, bond pads) in the
-// package's cavity, gold bond wires out to the lead frame, bent tin legs soldered to a green board.
-function chipTexture() {
-  const c = document.createElement('canvas');
-  c.width = c.height = 1024;
-  const x = c.getContext('2d');
-  x.fillStyle = '#20242c'; x.fillRect(0, 0, 1024, 1024);
-  // functional blocks: cache arrays as fine regular grids, logic as dense random cells
-  const blocks = [[70, 70, 420, 300, 'cache'], [534, 70, 420, 300, 'cache'], [70, 654, 420, 300, 'cache'], [534, 654, 420, 300, 'cache'],
-    [70, 400, 260, 224, 'logic'], [360, 400, 304, 224, 'core'], [694, 400, 260, 224, 'logic']];
-  for (const [bx, by, bw, bh, kind] of blocks) {
-    x.fillStyle = kind === 'cache' ? '#2c3646' : kind === 'core' ? '#3a3040' : '#283a36';
-    x.fillRect(bx, by, bw, bh);
-    if (kind === 'cache') {
-      x.strokeStyle = 'rgba(160,190,230,0.35)'; x.lineWidth = 1;
-      for (let i = bx; i < bx + bw; i += 6) { x.beginPath(); x.moveTo(i, by); x.lineTo(i, by + bh); x.stroke(); }
-      for (let j = by; j < by + bh; j += 6) { x.beginPath(); x.moveTo(bx, j); x.lineTo(bx + bw, j); x.stroke(); }
-      x.fillStyle = 'rgba(0,0,0,0.35)'; x.fillRect(bx + bw / 2 - 4, by, 8, bh);
-    } else {
-      for (let k = 0; k < 2400; k++) {
-        x.fillStyle = `rgba(${150 + Math.random() * 100},${150 + Math.random() * 100},${170 + Math.random() * 80},${0.15 + Math.random() * 0.3})`;
-        x.fillRect(bx + Math.random() * bw, by + Math.random() * bh, 2 + Math.random() * 7, 2 + Math.random() * 3);
-      }
-    }
-    x.strokeStyle = 'rgba(200,210,230,0.4)'; x.lineWidth = 2; x.strokeRect(bx, by, bw, bh);
-  }
-  // bond pads and the seal ring
-  x.fillStyle = '#d8c690';
-  for (let i = 0; i < 24; i++) {
-    const t = 60 + i * 37;
-    x.fillRect(t, 22, 22, 22); x.fillRect(t, 980, 22, 22); x.fillRect(22, t, 22, 22); x.fillRect(980, t, 22, 22);
-  }
-  x.strokeStyle = 'rgba(220,220,230,0.6)'; x.lineWidth = 4; x.strokeRect(8, 8, 1008, 1008);
-  const t = new THREE.CanvasTexture(c);
-  t.colorSpace = THREE.SRGBColorSpace;
-  t.anisotropy = 8;
-  return t;
-}
-function boardTexture() {
-  const c = document.createElement('canvas');
-  c.width = c.height = 1024;
-  const x = c.getContext('2d');
-  x.fillStyle = '#0d3a26'; x.fillRect(0, 0, 1024, 1024);
-  x.strokeStyle = '#2f7a4c'; x.lineWidth = 5; x.lineCap = 'round';
-  for (let i = 0; i < 48; i++) { // traces leaving the chip's pads
-    const side = i % 4, k = Math.floor(i / 4), off = 330 + k * 30;
-    x.beginPath();
-    if (side === 0) { x.moveTo(off, 300); x.lineTo(off, 200 - k * 6); x.lineTo(off - 120, 120 - k * 4); }
-    if (side === 1) { x.moveTo(off, 724); x.lineTo(off, 824 + k * 6); x.lineTo(off + 120, 904 + k * 4); }
-    if (side === 2) { x.moveTo(300, off); x.lineTo(200 - k * 6, off); x.lineTo(120 - k * 4, off + 120); }
-    if (side === 3) { x.moveTo(724, off); x.lineTo(824 + k * 6, off); x.lineTo(904 + k * 4, off - 120); }
-    x.stroke();
-  }
-  x.fillStyle = '#c9ccd2'; // pads under the legs
-  for (let k = 0; k < 12; k++) {
-    const off = 322 + k * 34;
-    x.fillRect(off, 270, 16, 46); x.fillRect(off, 708, 16, 46); x.fillRect(270, off, 46, 16); x.fillRect(708, off, 46, 16);
-  }
-  x.fillStyle = '#e8eef0'; x.font = '600 40px "IBM Plex Sans", sans-serif';
-  x.fillText('U1', 230, 250);
-  for (const [vx, vy] of [[120, 520], [900, 480], [500, 120], [520, 920], [160, 860], [880, 150]]) {
-    x.fillStyle = '#c9ccd2'; x.beginPath(); x.arc(vx, vy, 12, 0, 6.3); x.fill();
-    x.fillStyle = '#0d1a14'; x.beginPath(); x.arc(vx, vy, 5, 0, 6.3); x.fill();
-  }
-  const t = new THREE.CanvasTexture(c);
-  t.colorSpace = THREE.SRGBColorSpace;
-  t.anisotropy = 8;
-  return t;
-}
-
-function chip() {
-  const g = new THREE.Group();
-  const board = new THREE.Mesh(new RoundedBoxGeometry(9, 9, 0.22, 2, 0.05),
-    fading(new THREE.MeshPhysicalMaterial({ map: boardTexture(), roughness: 0.45, clearcoat: 0.6, clearcoatRoughness: 0.3 })));
-  board.position.z = -0.45;
-  g.add(board);
-  const epoxy = fading(new THREE.MeshStandardMaterial({ color: 0x15161a, roughness: 0.62 }));
-  const body = new THREE.Mesh(new RoundedBoxGeometry(4.6, 4.6, 0.5, 2, 0.05), epoxy);
-  g.add(body);
-  // the cavity floor, gold lead-frame fingers, the die
-  const floor = new THREE.Mesh(new THREE.PlaneGeometry(3.1, 3.1), fading(new THREE.MeshStandardMaterial({ color: 0x2a2620, roughness: 0.5, metalness: 0.4 })));
-  floor.position.z = 0.252;
-  g.add(floor);
-  const fingerMat = fading(new THREE.MeshStandardMaterial({ color: 0xe2bd62, metalness: 1, roughness: 0.25 }));
-  const wireMat = fading(new THREE.MeshStandardMaterial({ color: 0xf2cf6a, metalness: 1, roughness: 0.2 }));
-  const die = new THREE.Mesh(new THREE.BoxGeometry(1.9, 1.9, 0.06), fading(new THREE.MeshPhysicalMaterial({
-    map: chipTexture(), metalness: 0.55, roughness: 0.22, iridescence: 1, iridescenceIOR: 1.7, iridescenceThicknessRange: [180, 820], envMapIntensity: 1.6,
-  })));
-  die.position.z = 0.29;
-  g.add(die);
-  for (let side = 0; side < 4; side++) {
-    for (let k = 0; k < 12; k++) {
-      const t = -0.81 + k * 0.147;
-      const rot = side * Math.PI / 2;
-      const local = (u, v, z) => new THREE.Vector3(u, v, z).applyAxisAngle(new THREE.Vector3(0, 0, 1), rot);
-      const finger = new THREE.Mesh(new THREE.BoxGeometry(0.07, 0.42, 0.02), fingerMat);
-      finger.position.copy(local(t * 1.45, 1.35, 0.262));
-      finger.rotation.z = rot;
-      g.add(finger);
-      const curve = new THREE.CatmullRomCurve3([local(t * 0.98, 0.88, 0.33), local(t * 1.2, 1.08, 0.55), local(t * 1.45, 1.2, 0.27)]);
-      g.add(new THREE.Mesh(new THREE.TubeGeometry(curve, 12, 0.006, 5), wireMat));
-    }
-  }
-  // gull-wing legs: out from the body, down to the board, out again
-  const legShape = new THREE.Shape();
-  legShape.moveTo(0, 0); legShape.lineTo(0.26, 0); legShape.lineTo(0.42, -0.42); legShape.lineTo(0.7, -0.42);
-  legShape.lineTo(0.7, -0.48); legShape.lineTo(0.38, -0.48); legShape.lineTo(0.22, -0.06); legShape.lineTo(0, -0.06);
-  const legGeo = new THREE.ExtrudeGeometry(legShape, { depth: 0.12, bevelEnabled: false });
-  legGeo.translate(0, 0, -0.06);
-  const tin = fading(new THREE.MeshPhysicalMaterial({ color: 0xd9dde3, metalness: 1, roughness: 0.28 }));
-  for (let side = 0; side < 4; side++) {
-    for (let k = 0; k < 12; k++) {
-      const leg = new THREE.Mesh(legGeo, tin);
-      const t = -1.87 + k * 0.34;
-      leg.rotation.set(Math.PI / 2, 0, 0);
-      const holder = new THREE.Group();
-      holder.add(leg);
-      leg.position.set(2.3, 0, 0.05);
-      leg.rotation.set(Math.PI / 2, 0, 0);
-      holder.position.set(0, 0, 0);
-      holder.rotation.z = side * Math.PI / 2;
-      leg.position.y = t;
-      g.add(holder);
-    }
-  }
-  // pin-one dimple and laser marking
-  const mark = document.createElement('canvas');
-  mark.width = 512; mark.height = 512;
-  const m = mark.getContext('2d');
-  m.fillStyle = 'rgba(190,195,205,0.55)'; m.font = '600 26px "IBM Plex Sans", sans-serif';
-  m.fillText('MV-2026  64-CORE', 120, 470); m.fillText('e4 2610', 190, 500);
-  m.beginPath(); m.arc(48, 48, 16, 0, 6.3); m.fillStyle = 'rgba(0,0,0,0.6)'; m.fill();
-  const mt = new THREE.CanvasTexture(mark);
-  const decal = new THREE.Mesh(new THREE.PlaneGeometry(4.5, 4.5), fading(new THREE.MeshBasicMaterial({ map: mt, transparent: true, depthWrite: false })));
-  decal.position.z = 0.253;
-  g.add(decal);
-  anchor(g, 'die', 0.3, 0.2, 0.33);
-  anchor(g, 'wire', -0.1, 1.1, 0.52);
-  anchor(g, 'trace', -1.25, 3.45, -0.32);
-  anchor(g, 'epoxy', 1.75, -1.75, 0.26);
-  anchor(g, 'board', 3.6, -3.4, -0.32);
-  g.rotation.set(-0.85, 0, 0.5);
-  g.scale.setScalar(1.05);
-  return g;
-}
-
 // The Zilog Z80 (1976): a 40-pin plastic DIP, decapped to show its NMOS die, drawn in the style of a die
 // photo: bright aluminium wiring over orange polysilicon and olive diffusion.
 // Layout: the datapath runs along the bottom, as Ken Shirriff's reverse engineering of Z80 die photos
@@ -483,28 +337,72 @@ function z80Chip() {
       g.add(new THREE.Mesh(new THREE.TubeGeometry(curve, 10, 0.006, 5), wireMat));
     }
   }
-  // 40 through-hole legs, 2.54 mm apart: a wide shoulder, then a narrow pin down
+  // 40 through-hole leads, 2.54 mm apart, each one piece: out of the body's side at mid-height, a short
+  // flat step, a bend, a wide shoulder down to the board, then a narrow pin through it
   const tin = fading(new THREE.MeshPhysicalMaterial({ color: 0xd4d8de, metalness: 1, roughness: 0.3 }));
-  const shoulder = new THREE.BoxGeometry(0.28, 0.42, 0.06);
-  const pin = new THREE.BoxGeometry(0.11, 0.06, 0.9);
+  const boardTop = -0.56;
+  const tab = new THREE.BoxGeometry(0.27, 0.34, 0.05);           // runs out of the body
+  const shoulderGeo = new THREE.BoxGeometry(0.27, 0.05, 0.56);   // the wide part, down to the board
+  const pinGeo = new THREE.BoxGeometry(0.1, 0.05, 0.62);         // through the board
   const pitch = L / 20.5;
   for (const side of [-1, 1]) {
     for (let k = 0; k < 20; k++) {
       const x = -L / 2 + pitch * (k + 0.75);
-      const sh = new THREE.Mesh(shoulder, tin);
-      sh.position.set(x, side * (W / 2 + 0.17), -0.05);
-      sh.rotation.x = side * 0.5;
-      const leg = new THREE.Mesh(pin, tin);
-      leg.position.set(x, side * (W / 2 + 0.33), -0.55);
-      g.add(sh, leg);
+      const yOut = side * (W / 2 + 0.26);
+      const t = new THREE.Mesh(tab, tin);
+      t.position.set(x, side * (W / 2 + 0.11), 0);               // starts inside the body, so it is joined
+      const sh = new THREE.Mesh(shoulderGeo, tin);
+      sh.position.set(x, yOut, -0.26);
+      const pn = new THREE.Mesh(pinGeo, tin);
+      pn.position.set(x, yOut, boardTop - 0.2);
+      g.add(t, sh, pn);
     }
   }
+  // the circuit board it is soldered to: green FR-4, a copper pad round every pin, traces leading away
+  const BW = 12.6, BH = 6.8, pads = [];
+  for (const side of [-1, 1]) for (let k = 0; k < 20; k++) pads.push([-L / 2 + pitch * (k + 0.75), side * (W / 2 + 0.26)]);
+  const bc = document.createElement('canvas');
+  bc.width = 2048; bc.height = Math.round(2048 * BH / BW);
+  const bx = bc.getContext('2d');
+  const U = (x) => (x / BW + 0.5) * bc.width, V = (y) => (0.5 - y / BH) * bc.height;
+  bx.fillStyle = '#0d3a26'; bx.fillRect(0, 0, bc.width, bc.height);
+  bx.strokeStyle = '#3c8a58'; bx.lineWidth = 9; bx.lineCap = 'round'; bx.lineJoin = 'round';
+  pads.forEach(([x, y], i) => {          // each pad's trace runs away from the chip, then turns
+    const dir = Math.sign(y), k = i % 20;
+    bx.beginPath(); bx.moveTo(U(x), V(y));
+    bx.lineTo(U(x), V(y + dir * (0.5 + (k % 5) * 0.18)));
+    bx.lineTo(U(x + (k < 10 ? -1 : 1) * (0.8 + (k % 5) * 0.3)), V(y + dir * (1.2 + (k % 5) * 0.18)));
+    bx.stroke();
+  });
+  pads.forEach(([x, y]) => {
+    bx.fillStyle = '#d8b46a'; bx.beginPath(); bx.arc(U(x), V(y), 22, 0, 6.3); bx.fill();   // copper pad, tinned
+    bx.fillStyle = '#1a1208'; bx.beginPath(); bx.arc(U(x), V(y), 8, 0, 6.3); bx.fill();
+  });
+  bx.strokeStyle = 'rgba(235,240,240,0.8)'; bx.lineWidth = 4;
+  bx.strokeRect(U(-L / 2 - 0.1), V(W / 2 + 0.55), U(L / 2 + 0.1) - U(-L / 2 - 0.1), V(-W / 2 - 0.55) - V(W / 2 + 0.55));
+  bx.fillStyle = 'rgba(235,240,240,0.85)'; bx.font = '600 56px "IBM Plex Sans", sans-serif';
+  bx.fillText('U1  Z80 CPU', U(-L / 2), V(W / 2 + 0.75));
+  const btex = new THREE.CanvasTexture(bc);
+  btex.colorSpace = THREE.SRGBColorSpace;
+  btex.anisotropy = 8;
+  const board = new THREE.Mesh(new RoundedBoxGeometry(BW, BH, 0.28, 2, 0.04),
+    fading(new THREE.MeshPhysicalMaterial({ map: btex, roughness: 0.5, clearcoat: 0.5, clearcoatRoughness: 0.35 })));
+  board.position.z = boardTop - 0.14;
+  g.add(board);
+  // solder joints where each pin meets its pad
+  const solder = fading(new THREE.MeshPhysicalMaterial({ color: 0xc9ccd1, metalness: 1, roughness: 0.22 }));
+  const fillet = new THREE.ConeGeometry(0.13, 0.12, 16);
+  fillet.rotateX(Math.PI / 2);
+  pads.forEach(([x, y]) => { const f = new THREE.Mesh(fillet, solder); f.position.set(x, y, boardTop + 0.05); g.add(f); });
+  anchor(g, 'trace', 3.9, -W / 2 - 1.5, boardTop + 0.01);
+  anchor(g, 'board', 5.6, W / 2 + 2.2, boardTop + 0.01);
   anchor(g, 'die', 0.25, 0.2, H / 2 + 0.07);
-  anchor(g, 'wire', -0.3, 0.7, H / 2 + 0.18);
-  anchor(g, 'legs', 3.6, W / 2 + 0.33, -0.7);
+  anchor(g, 'wire', -1.05, -0.95, H / 2 + 0.05);
+  anchor(g, 'legs', -3.3, -(W / 2 + 0.26), -0.3);
   anchor(g, 'package', 3.2, 0.6, H / 2);
-  g.rotation.set(-0.9, 0, 0.35);
-  g.scale.setScalar(0.92);
+  g.rotation.set(-0.95, 0, 0.32);
+  g.scale.setScalar(0.74);
+  g.position.y = 0.6;
   return g;
 }
 
@@ -711,19 +609,8 @@ export const THINGS = [
     note: 'Why gold is yellow: Einstein',
     blurb: 'Gold atoms pack together the densest way spheres can, each touching twelve neighbours. Its colour comes from relativity: the inner electrons move so fast that gold absorbs blue light and reflects the rest.',
     stats: [['Across', '2', 'cm'], ['Neighbours each', '12', ''], ['Gold atoms', '10²²', ''], ['Tarnish', 'Never', '']] },
-  { key: 'chip', name: 'Computer chip', title: 'A computer chip', child: 'silicon', size: 1e-2, model: chip, formula: 'Si', icon: 'chip',
-    parts: [
-      { key: 'die', label: 'Silicon die', child: 'silicon', note: 'The chip itself: a slice of silicon crystal.' },
-      { key: 'wire', label: 'Gold bond wire', child: 'gold', note: 'Wires a quarter the width of a hair join die to legs.' },
-      { key: 'trace', label: 'Copper trace', child: 'copper', note: 'The board’s wiring.' },
-      { key: 'epoxy', label: 'Black package', made: [['quartz', 80], ['epoxy', 20]], note: 'Mould compound: epoxy resin filled with silica, about four fifths silica by weight.' },
-      { key: 'board', label: 'Circuit board', made: [['quartz', 60], ['epoxy', 40]], note: 'FR-4: woven glass fibre (silica, like quartz but disordered) set in epoxy resin.' },
-    ],
-    note: 'Billions of switches in a crystal',
-    blurb: 'A slice of nearly perfect silicon crystal, arranged exactly like diamond, with billions of transistors etched into it. The smallest features are only tens of atoms across.',
-    stats: [['Across', '1', 'cm'], ['Transistors', '10¹⁰', ''], ['Silicon–silicon', '0.24', 'nm'], ['Purity', '99.9999999', '%']] },
-  { key: 'z80', name: 'Z80 processor', title: 'A Z80 processor', child: 'silicon', size: 5.2e-2, model: z80Chip, formula: 'Si', icon: 'dip',
-    note: '1976: a computer brain you could almost count',
+  { key: 'chip', name: 'Computer chip', title: 'A computer chip', child: 'silicon', size: 5.2e-2, model: z80Chip, formula: 'Si', icon: 'dip',
+    note: 'The Z80 of 1976: a computer brain you could almost count',
     blurb: 'Zilog’s Z80, designed by Federico Faggin and Masatoshi Shima and launched in 1976, ran the ZX Spectrum, the TRS-80 and MSX computers, and lives on inside the Game Boy’s processor. Its whole brain is about 8,500 transistors, drawn on the die in the window.',
     stats: [['Year', '1976', ''], ['Transistors', '8,500', ''], ['Clock', '2.5', 'MHz'], ['Pins', '40', '']],
     compare: 'A modern processor has over a million times as many transistors, and runs more than a thousand times faster.',
@@ -732,6 +619,8 @@ export const THINGS = [
       { key: 'wire', label: 'Gold bond wire', child: 'gold', note: 'Forty of them, each finer than a hair.' },
       { key: 'legs', label: 'Legs', child: 'copper', note: 'Copper alloy, tin-plated, 2.54 mm apart.' },
       { key: 'package', label: 'Black package', made: [['quartz', 80], ['epoxy', 20]], note: 'Epoxy resin filled with silica, about four fifths silica by weight.' },
+      { key: 'trace', label: 'Copper trace', child: 'copper', note: 'The board’s wiring, carrying signals to and from each pin.' },
+      { key: 'board', label: 'Circuit board', made: [['quartz', 60], ['epoxy', 40]], note: 'FR-4: woven glass fibre (silica, like quartz but disordered) set in epoxy resin.' },
     ] },
   { key: 'coffee', name: 'Cup of coffee', title: 'A cup of coffee', child: 'caffeine', size: 8e-2, model: coffeeCup, formula: 'C₈H₁₀N₄O₂', icon: 'cup',
     parts: [

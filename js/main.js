@@ -182,6 +182,7 @@ function setHash(key, title) {
 function go(key) {
   if (key === 'table') return loadTable();
   if (key === 'snowflake' || key === 'thing-snowflake') return loadSnowflake();
+  if (key === 'thing-z80') key = 'thing-chip'; // the Z80 is now the computer chip; old links still work
   const tk = /^thing-(\w+)$/.exec(key)?.[1];
   if (tk && THING[tk]) return loadThing(tk);
   if (key === 'particles') return loadParticles();
