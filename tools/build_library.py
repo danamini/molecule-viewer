@@ -417,6 +417,21 @@ def iron():
     return cubic(2.866, [(0, 0, 0), (.5, .5, .5)], 6.4, "Fe", 2.6, 0)
 
 
+def chromium():
+    # body-centred cubic, a = 2.885 A
+    return cubic(2.885, [(0, 0, 0), (.5, .5, .5)], 6.4, "Cr", 2.6, 0)
+
+
+def nickel():
+    # face-centred cubic, a = 3.524 A
+    return cubic(3.524, [(0, 0, 0), (0, .5, .5), (.5, 0, .5), (.5, .5, 0)], 6.6, "Ni", 2.6, 0)
+
+
+def silver():
+    # face-centred cubic, a = 4.086 A
+    return cubic(4.086, [(0, 0, 0), (0, .5, .5), (.5, 0, .5), (.5, .5, 0)], 7.2, "Ag", 3.0, 0)
+
+
 def silicon():
     # diamond cubic, a = 5.431 A; Si-Si 2.35 A
     basis = [(0, 0, 0), (0, .5, .5), (.5, 0, .5), (.5, .5, 0), (.25, .25, .25), (.25, .75, .75), (.75, .25, .75), (.75, .75, .25)]
@@ -448,6 +463,15 @@ CRYSTALS = [
     ("iron", iron, "Iron", "Iron", "Fe", 55.845,
      "Iron at room temperature: each atom at the centre of a cube of eight others. Add a little carbon in the gaps and it becomes steel.",
      "Body-centred cubic lattice (alpha iron), a = 2.866 Å"),
+    ("chromium", chromium, "Chromium", "Chromium", "Cr", 51.996,
+     "Its oxide forms a film a few atoms thick that heals itself when scratched. That film is what makes stainless steel stainless.",
+     "Body-centred cubic lattice, a = 2.885 Å"),
+    ("nickel", nickel, "Nickel", "Nickel", "Ni", 58.693,
+     "Tough and corrosion-resistant. In stainless steel it holds the iron in a face-centred crystal, which is why most stainless cutlery is not magnetic.",
+     "Face-centred cubic lattice, a = 3.524 Å"),
+    ("silver", silver, "Silver", "Silver", "Ag", 107.87,
+     "The best electrical conductor of any element, its atoms packed the same way as gold's.",
+     "Face-centred cubic lattice, a = 4.086 Å"),
     ("silicon", silicon, "Silicon", "Silicon", "Si", 28.085,
      "The crystal inside every computer chip: silicon arranged exactly like diamond, grown so pure that only about one atom in a billion is anything else.",
      "Diamond cubic lattice, a = 5.431 Å"),

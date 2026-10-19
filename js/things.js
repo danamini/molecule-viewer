@@ -5,6 +5,7 @@ import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.j
 import { CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
 import { cloudMaterial, pointsFrom, buffer, push, randomDir } from './cloud.js';
 import { fadeMaterials, tick } from './dive.js';
+import { element } from './elements.js';
 
 const fading = m => { m.userData.fades = true; return m; };
 // a named point on a model where a part can be zoomed into; it moves with the model
@@ -705,7 +706,8 @@ export const THINGS = [
     note: 'There is no lead in it',
     blurb: 'Pencil "lead" is graphite: carbon in flat sheets of hexagons, stacked loosely. Writing peels sheets off onto the paper. A single sheet on its own is graphene, one atom thick.',
     stats: [['Across', '2', 'cm'], ['Lead in it', '0', ''], ['Sheet spacing', '0.34', 'nm'], ['Carbon–carbon', '0.14', 'nm']] },
-  { key: 'gold', name: 'Gold ring', title: 'A gold ring', child: 'gold', size: 2e-2, model: goldRing, formula: 'Au', icon: 'ring',
+  { key: 'gold', name: 'Gold ring', title: 'A gold ring', child: 'gold', size: 2e-2, model: goldRing, formula: 'Au, Ag, Cu', icon: 'ring',
+    made: [['gold', 75], ['silver', 13], ['copper', 12]], madeNote: '18-carat gold: 18 parts in 24 are gold, the rest silver and copper for hardness and colour.',
     note: 'Why gold is yellow: Einstein',
     blurb: 'Gold atoms pack together the densest way spheres can, each touching twelve neighbours. Its colour comes from relativity: the inner electrons move so fast that gold absorbs blue light and reflects the rest.',
     stats: [['Across', '2', 'cm'], ['Neighbours each', '12', ''], ['Gold atoms', '10²²', ''], ['Tarnish', 'Never', '']] },
@@ -714,8 +716,8 @@ export const THINGS = [
       { key: 'die', label: 'Silicon die', child: 'silicon', note: 'The chip itself: a slice of silicon crystal.' },
       { key: 'wire', label: 'Gold bond wire', child: 'gold', note: 'Wires a quarter the width of a hair join die to legs.' },
       { key: 'trace', label: 'Copper trace', child: 'copper', note: 'The board’s wiring.' },
-      { key: 'epoxy', label: 'Black package', child: 'epoxy', note: 'Epoxy plastic, filled with silica.' },
-      { key: 'board', label: 'Circuit board', child: 'quartz', note: 'Glass fibre: silicon and oxygen, like quartz but disordered.' },
+      { key: 'epoxy', label: 'Black package', made: [['quartz', 80], ['epoxy', 20]], note: 'Mould compound: epoxy resin filled with silica, about four fifths silica by weight.' },
+      { key: 'board', label: 'Circuit board', made: [['quartz', 60], ['epoxy', 40]], note: 'FR-4: woven glass fibre (silica, like quartz but disordered) set in epoxy resin.' },
     ],
     note: 'Billions of switches in a crystal',
     blurb: 'A slice of nearly perfect silicon crystal, arranged exactly like diamond, with billions of transistors etched into it. The smallest features are only tens of atoms across.',
@@ -729,14 +731,14 @@ export const THINGS = [
       { key: 'die', label: 'Silicon die', thing: 'z80-die', note: 'Every transistor of the Z80, on one sliver of silicon. Zoom in to see its parts.' },
       { key: 'wire', label: 'Gold bond wire', child: 'gold', note: 'Forty of them, each finer than a hair.' },
       { key: 'legs', label: 'Legs', child: 'copper', note: 'Copper alloy, tin-plated, 2.54 mm apart.' },
-      { key: 'package', label: 'Black package', child: 'epoxy', note: 'Epoxy plastic around the die.' },
+      { key: 'package', label: 'Black package', made: [['quartz', 80], ['epoxy', 20]], note: 'Epoxy resin filled with silica, about four fifths silica by weight.' },
     ] },
   { key: 'coffee', name: 'Cup of coffee', title: 'A cup of coffee', child: 'caffeine', size: 8e-2, model: coffeeCup, formula: 'C₈H₁₀N₄O₂', icon: 'cup',
     parts: [
       { key: 'caffeine', label: 'Caffeine', child: 'caffeine', note: 'About 95 mg in the cup.' },
       { key: 'water', label: 'Water', child: 'water', note: 'Ninety-eight per cent of it.' },
       { key: 'cup', label: 'Porcelain cup', child: 'quartz', note: 'Fired clay: mostly silicon and oxygen, like quartz.' },
-      { key: 'spoon', label: 'Steel spoon', child: 'iron', note: 'Stainless steel is mostly iron.' },
+      { key: 'spoon', label: 'Steel spoon', made: [['iron', 72], ['chromium', 18], ['nickel', 8]], note: '18/8 stainless steel: 18% chromium, 8% nickel, the rest iron.' },
     ],
     note: 'Where the wake-up comes from',
     blurb: 'A cup holds about 95 milligrams of caffeine: three hundred billion billion molecules, each the right shape to slip into the brain’s adenosine receptors and block the signal to feel tired.',
@@ -773,12 +775,24 @@ export const INNER = [
 ];
 export const THING = Object.fromEntries([...THINGS, ...INNER].map(t => [t.key, t]));
 
-export function thingLevel(thing, onPart) {
+// which elements a part is made of, following mixtures and deeper levels down to the library entries
+export function partElements(part, lookup) {
+  const keys = part.made ? part.made.map(m => m[0]) : part.child ? [part.child] : [];
+  const out = new Set();
+  keys.forEach(k => lookup(k)?.atoms.forEach(a => out.add(a[0])));
+  if (part.thing) (THING[part.thing].parts || []).forEach(sub => partElements(sub, lookup).forEach(e => out.add(e)));
+  const order = ['C', 'H'];
+  return [...out].sort((a, b) => (order.indexOf(a) + 1 || 99) - (order.indexOf(b) + 1 || 99) || a.localeCompare(b));
+}
+const badgeColor = sym => { const c = sym === 'C' ? 0x9aa3b0 : element(sym).color; return `#${c.toString(16).padStart(6, '0')}`; };
+export const elementBadges = syms => syms.map(sym => `<b class="el-badge" style="--c:${badgeColor(sym)}">${sym}</b>`).join('');
+
+export function thingLevel(thing, onPart, lookup = () => null) {
   const group = new THREE.Group();
   const model = thing.model();
   group.add(studioBackdrop(), model);
   // composite things: a labelled hotspot on each part, which dives into that part's material
-  const parts = thing.parts || [{ key: 'whole', label: thing.name, child: thing.child }];
+  const parts = thing.parts || [{ key: 'whole', label: thing.name, child: thing.child, made: thing.made, note: thing.madeNote || '' }];
   const hotspots = [];
   (thing.parts || []).forEach((part, i) => {
     const at = model.userData.anchors?.[part.key];
@@ -786,7 +800,11 @@ export function thingLevel(thing, onPart) {
     const el = document.createElement('button');
     el.type = 'button';
     el.className = 'hotspot';
-    el.innerHTML = `<i></i><span>${part.label}</span>`;
+    // the dot takes the main element's colour; badges say what the part is made of
+    const els = partElements(part, lookup);
+    const main = part.made ? lookup(part.made[0][0])?.atoms[0][0] : els.find(e => e !== 'H') || els[0];
+    el.style.setProperty('--c', main ? badgeColor(main) : '#f2b45a');
+    el.innerHTML = `<i></i><span>${part.label}</span><span class="badges">${elementBadges(els.slice(0, 5))}${els.length > 5 ? '<b class="el-badge more">+</b>' : ''}</span>`;
     el.title = part.note;
     el.addEventListener('click', e => { e.stopPropagation(); onPart?.(i); });
     const o = new CSS2DObject(el);

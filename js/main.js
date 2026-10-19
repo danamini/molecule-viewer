@@ -8,7 +8,7 @@ import { suggest, fetchCompound, wikipedia } from './sources.js';
 import { magnification, analogy, RULER, RULER_MARKS, UNEXPLORED, pow10, formatHuman as formatHumanSize } from './scale.js';
 import { WHERE } from './facts.js';
 import { PARTICLES, PARTICLE_FAMILIES } from './particles.js';
-import { THINGS, THING, THING_ICONS } from './things.js';
+import { THINGS, THING, THING_ICONS, partElements, elementBadges } from './things.js';
 
 const $ = s => document.querySelector(s);
 const hex = n => `#${n.toString(16).padStart(6, '0')}`;
@@ -38,6 +38,7 @@ try {
     onHover: showTip,
     onPush: showPush,
     onFrame: updateScale,
+    onMeasure: showMeasure,
   });
 } catch (err) {
   $('#veil').classList.add('error');
@@ -398,6 +399,7 @@ async function loadWiki(title) {
 
 function atomSize(el) { return 2 * el.vdw * 100; } // pm
 function nucleusFm(el) { return 2 * 1.2 * Math.cbrt(el.A); }
+const findEntry = key => LIBRARY.find(e => e.key === key);
 const foundIn = sym => LIBRARY.filter(e => e.atoms.some(a => a[0] === sym));
 
 function renderAtom(level) {
@@ -625,14 +627,27 @@ function renderThing(level) {
     <p class="blurb">${esc(t.blurb)}</p>
     <dl class="stats">${t.stats.map(([k, v, u]) => `<div><dt>${esc(k)}</dt><dd${v.length > 6 ? ' style="font-size:18px"' : ''}>${esc(v)}${u ? `<small>${esc(u)}</small>` : ''}</dd></div>`).join('')}</dl>
     ${t.compare ? `<p class="blurb where">${esc(t.compare)}</p>` : ''}
+    ${t.made ? `<div><p class="label-line">Made of</p><div class="parts"><button type="button" class="part" data-dive-part="0"><b>${esc(t.made.map(([k, sh]) => `${findEntry(k).name} ${sh}%`).join(', '))} <span class="badges">${elementBadges(partElements({ made: t.made }, findEntry))}</span></b><small>${esc(t.madeNote || '')}</small></button></div></div>` : ''}
     ${t.parts ? `<div><p class="label-line">Zoom into a part</p><div class="parts">${t.parts.map((pt, i) => `
-      <button type="button" class="part" data-dive-part="${i}"><b>${esc(pt.label)}</b><small>${esc(pt.note)}</small></button>`).join('')}</div></div>`
+      <button type="button" class="part" data-dive-part="${i}"><b>${esc(pt.label)} <span class="badges">${elementBadges(partElements(pt, findEntry))}</span></b><small>${esc(pt.note)}</small>${pt.made?.length > 1 ? `<small class="mixline">${pt.made.map(([k, sh]) => `${esc(findEntry(k).name)} ${sh}%`).join(', ')}</small>` : ''}</button>`).join('')}</div></div>`
       : `<p class="hint-line">${ZOOM_IC}<span>Scroll in to see what it is made of.</span></p>`}
     <div ${t.inner ? 'hidden' : ''}><p class="label-line">Other journeys</p><div class="chips">${THINGS.filter(o => o.key !== t.key).map(o => `<button type="button" class="chip link" data-go="thing-${o.key}">${esc(o.name)}</button>`).join('')}</div></div>
     <p class="note">${t.source ? `${esc(t.source)} ` : ''}${t.inner ? 'A drawing to explain the structure, not a photograph; proportions are approximate.' : 'The object is drawn, not photographed; what is inside it is real structural data.'}</p>`;
 }
 
-const RENDER = { thing: renderThing, particles: renderParticles, particle: renderParticle, atom: renderAtom, nucleus: renderNucleus, nucleon: renderNucleon, planck: renderPlanck, snowflake: renderSnowflake, table: renderTable, molecule: renderMolecule };
+function renderMixture(level) {
+  const part = level.part;
+  setSpecimen(part.label, level.members.map(m => esc(m.entry.formula)).join(' + '), 'A mixture: more than one material');
+  $('#detailsBody').innerHTML = `
+    <p class="blurb">${esc(part.note)}</p>
+    <p class="blurb">Each material is shown side by side at true relative scale, labelled with its share by weight. Click one to zoom into it.</p>
+    <div class="parts">${level.members.map((m, i) => `
+      <button type="button" class="part" data-dive-part="${i}"><b>${esc(m.entry.name)} ${m.share}% <span class="badges">${elementBadges(partElements({ child: m.key }, findEntry))}</span></b><small>${esc(m.entry.blurb || '')}</small></button>`).join('')}
+    </div>
+    <div class="share-bar" role="img" aria-label="Share by weight">${level.members.map((m, i) => `<i style="flex:${m.share};--h:${i * 47}"></i>`).join('')}</div>`;
+}
+
+const RENDER = { mixture: renderMixture, thing: renderThing, particles: renderParticles, particle: renderParticle, atom: renderAtom, nucleus: renderNucleus, nucleon: renderNucleon, planck: renderPlanck, snowflake: renderSnowflake, table: renderTable, molecule: renderMolecule };
 function previewLevel(level) {
   // as a dive starts, show the destination's name at once
   state.shown = level;
@@ -665,7 +680,8 @@ const DIVE_LABEL = {
   atom: () => 'Zoom into the nucleus', nucleus: () => 'Zoom into a proton', nucleon: () => 'Zoom to the Planck length',
   planck: () => 'Smallest level', snowflake: () => 'Zoom into the ice', table: () => 'Zoom into an element',
   particles: () => 'Zoom into a particle', particle: () => 'Zoom to the Planck length',
-  thing: l => (l.thing.parts ? `Zoom into the ${softLower(l.thing.parts[0].label)}` : l.childEntry?.crystal ? 'Zoom into the crystal' : 'Zoom into a molecule'),
+  mixture: l => `Zoom into the ${softLower(l.members[0].entry.name)}`,
+  thing: l => (l.thing.made ? 'Zoom into what it is made of' : l.thing.parts ? `Zoom into the ${softLower(l.thing.parts[0].label)}` : l.childEntry?.crystal ? 'Zoom into the crystal' : 'Zoom into a molecule'),
 };
 function updateDock(level) {
   const kind = level.kind;
@@ -690,6 +706,7 @@ function crumbName(l) {
   if (l.kind === 'particle') return [l.particle.name, `< ${pow10(-18)} m`];
   if (l.kind === 'particles') return ['Particle zoo', ''];
   if (l.kind === 'thing') return [l.thing.name, formatHumanSize(l.sizeMetres)];
+  if (l.kind === 'mixture') return [l.part.label, 'mixture'];
   return ['Periodic table', ''];
 }
 function renderCrumbs() {
@@ -799,11 +816,22 @@ canvas.addEventListener('pointerup', e => {
   }
   if (double) { stage.clearSelection(); stage.dive(hit.journey && hit.atom.symbol !== 'O' ? undefined : hit.index); lastTap = null; return; }
   const sel = stage.toggleSelect(hit.index);
-  if (sel.length === 1 && !state.measuredOnce) {
-    state.measuredOnce = true;
-    toast('Click a second atom to measure the distance, a third for the angle. Esc clears.');
-  }
+
 });
+
+// the measurement readout: every distance and the angle, spelled out
+function showMeasure(r) {
+  const box = $('#measureCard');
+  if (!r) { box.hidden = true; return; }
+  const a = n => r.atoms[n - 1];
+  box.innerHTML = `
+    <div class="mc-head"><b>Measuring</b><span>${r.atoms.map(x => `<i>${x.n}</i>${esc(x.symbol)}`).join(' ')}</span><button type="button" id="measureClear" title="Clear (Esc)">Clear</button></div>
+    ${r.distances.map(d => `<div class="mc-row"><span>${d.from} → ${d.to} <small>${esc(a(d.from).symbol)}–${esc(a(d.to).symbol)}${d.bonded ? ', bonded' : ''}</small></span><b>${d.d.toFixed(2)} Å</b><small>${(d.d / 10).toFixed(3)} nm</small></div>`).join('')}
+    ${r.angle != null ? `<div class="mc-row"><span>Angle at ${2} <small>${esc(a(1).symbol)}–${esc(a(2).symbol)}–${esc(a(3).symbol)}</small></span><b>${r.angle.toFixed(1)}°</b><small></small></div>` : ''}
+    <p>${r.atoms.length === 1 ? 'Click a second atom for the distance between them.' : r.atoms.length === 2 ? 'Click a third atom for the angle.' : 'A fourth click starts again from that atom.'} 1 Å (ångström) is a ten-billionth of a metre.</p>`;
+  box.hidden = false;
+  $('#measureClear').addEventListener('click', () => stage.clearSelection());
+}
 
 function showTip(h) {
   const tip = $('#tip');
@@ -837,7 +865,7 @@ function positionTip(x, y) {
   tip.style.left = `${flip ? x - tip.offsetWidth - 36 - gap : x + gap}px`;
   tip.style.top = `${y}px`;
 }
-const NEXT_NAME = { thing: 'what it is made of',  atom: 'the nucleus', nucleus: 'a proton', nucleon: 'the Planck length', particle: 'the Planck length', snowflake: 'the ice', table: 'an element', particles: 'a particle' };
+const NEXT_NAME = { thing: 'what it is made of', mixture: 'one of its materials',  atom: 'the nucleus', nucleus: 'a proton', nucleon: 'the Planck length', particle: 'the Planck length', snowflake: 'the ice', table: 'an element', particles: 'a particle' };
 function showPush(p, dir) {
   const el = $('#push');
   el.style.opacity = p > 0.02 ? '1' : '0';

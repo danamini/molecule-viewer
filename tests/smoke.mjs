@@ -171,8 +171,8 @@ await test('every journey opens and zooms in', async page => {
 });
 
 await test('composite parts lead to their own materials', async page => {
-  const cases = [['chip', [['Silicon die', 'Silicon'], ['Gold bond wire', 'Gold'], ['Copper trace', 'Copper'], ['Black package', 'Epoxy resin'], ['Circuit board', 'Quartz']]],
-    ['coffee', [['Caffeine', 'Caffeine'], ['Steel spoon', 'Iron']]], ['pencil', [['Eraser', 'Isoprene'], ['Graphite tip', 'Graphene']]]];
+  const cases = [['chip', [['Silicon die', 'Silicon'], ['Gold bond wire', 'Gold'], ['Copper trace', 'Copper'], ['Black package', 'Black package'], ['Circuit board', 'Circuit board']]],
+    ['coffee', [['Caffeine', 'Caffeine'], ['Water', 'Water']]], ['pencil', [['Eraser', 'Isoprene'], ['Graphite tip', 'Graphene']]]];
   for (const [thing, parts] of cases) {
     await go(page, `thing-${thing}`);
     for (const [label, expected] of parts) {
@@ -197,6 +197,51 @@ await test('Z80: package, die, transistor, material', async page => {
   await wait(page, 2700);
   expect(await levels(page) === 'thing>thing>thing>molecule', 'four levels deep');
   expect(await title(page) === 'Quartz', 'gate oxide is silicon dioxide');
+});
+
+await test('hotspots show what each part is made of', async page => {
+  await go(page, 'thing-z80');
+  const badges = await page.evaluate(() => Object.fromEntries([...document.querySelectorAll('.hotspot')].map(h => [h.querySelector('span').textContent, [...h.querySelectorAll('.el-badge')].map(b => b.textContent).join(' ')])));
+  expect(badges['Gold bond wire'] === 'Au', `bond wire badges: ${badges['Gold bond wire']}`);
+  expect(badges['Black package'] === 'C H O Si', `package badges: ${badges['Black package']}`);
+});
+
+await test('mixtures show each material and dive into one', async page => {
+  await go(page, 'thing-coffee');
+  expect(await clickHotspot(page, 'Steel spoon'), 'spoon hotspot');
+  await wait(page, 2700);
+  expect(await levels(page) === 'thing>mixture', `spoon opens a mixture, got ${await levels(page)}`);
+  expect(await page.evaluate(() => viewer.stage.current.members.map(m => m.key).join()) === 'iron,chromium,nickel', '18/8 steel');
+  expect(await clickHotspot(page, 'Chromium'), 'chromium label');
+  await wait(page, 2700);
+  expect(await title(page) === 'Chromium', `chromium level, got ${await title(page)}`);
+  await go(page, 'thing-gold');
+  await page.keyboard.press('Enter');
+  await wait(page, 2700);
+  expect(await page.evaluate(() => viewer.stage.current.members.map(m => m.key).join()) === 'gold,silver,copper', '18-carat gold');
+});
+
+await test('measuring reports distances and the angle', async page => {
+  await go(page, 'water', 2500);
+  await page.evaluate(() => { viewer.stage.toggleSelect(1); viewer.stage.toggleSelect(0); viewer.stage.toggleSelect(2); });
+  await wait(page, 300);
+  expect(await page.isVisible('#measureCard'), 'readout card');
+  const rows = await page.$$eval('.mc-row b', b => b.map(x => x.textContent));
+  expect(rows.length === 3, `two distances and an angle, got ${rows}`);
+  const angle = parseFloat(rows[2]);
+  expect(angle > 100 && angle < 110, `water's angle ${angle}`);
+  expect((await page.$$('.measure-tag')).length === 3, 'numbered tags');
+  await page.click('#measureClear');
+  expect(!(await page.isVisible('#measureCard')), 'Clear hides the readout');
+});
+
+await test('a finished dive clears the scroll hint', async page => {
+  await go(page, 'thing-snowflake', 3000);
+  await page.mouse.move(720, 450);
+  for (let i = 0; i < 70; i++) { await page.mouse.wheel(0, -120); await wait(page, 25); }
+  await wait(page, 2800);
+  expect(await levels(page) === 'snowflake>molecule', 'wheel dived into the ice');
+  expect(await page.evaluate(() => document.querySelector('#push').style.opacity) === '0', 'hint hidden');
 });
 
 await test('guided journey descends with captions', async page => {

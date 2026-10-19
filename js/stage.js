@@ -16,7 +16,7 @@ import { solidModel, pickProxies, buildModel } from './structure.js';
 import { atomLevel, nucleusLevel, nucleonLevel, tick } from './dive.js';
 import { snowflakeLevel, tableLevel, planckLevel, particleLevel, particlesLevel } from './worlds.js';
 import { PARTICLE } from './particles.js';
-import { thingLevel, THING } from './things.js';
+import { thingLevel, THING, partElements, elementBadges } from './things.js';
 
 const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const ease = t => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
@@ -33,6 +33,7 @@ const LOOK = {
   planck: { bloom: 0.9, radius: 0.6, threshold: 0.0, ao: false, exposure: 0.95 },
   particle: { bloom: 0.9, radius: 0.6, threshold: 0.0, ao: false, exposure: 1.0 },
   particles: { bloom: 0.32, radius: 0.45, threshold: 0.72, ao: false, exposure: 0.95 },
+  mixture: { bloom: 0.25, radius: 0.4, threshold: 0.82, ao: true, exposure: 1.05 },
   thing: { bloom: 0.3, radius: 0.4, threshold: 0.78, ao: true, exposure: 1.0, studio: true },
   snowflake: { bloom: 0.38, radius: 0.45, threshold: 0.6, ao: false, exposure: 0.92 },
   table: { bloom: 0.14, radius: 0.4, threshold: 0.9, ao: false, exposure: 0.9 },
@@ -123,7 +124,7 @@ export function createStage(container, events = {}) {
   let camFly = null;
   const clock = new THREE.Clock();
   const current = () => levels[levels.length - 1];
-  const lookName = l => (l.kind === 'molecule' ? l.style : l.kind);
+  const lookName = l => (l.kind === 'molecule' ? l.style : l.kind === 'mixture' ? mode : l.kind);
 
   function fitDistance(radius) {
     const fov = THREE.MathUtils.degToRad(camera.fov);
@@ -300,16 +301,29 @@ export function createStage(container, events = {}) {
       level.next = choice => {
         const i = typeof choice === 'number' ? choice : 0;
         const part = level.parts[i];
+        const focus = level.thing.parts ? level.partPosition(i) : new THREE.Vector3();
+        if (part.made?.length > 1) { // made of several materials: show them side by side first
+          const mix = mixtureLevel(part, level.lookup);
+          mix.partOf = { thing: level.thing, part };
+          return { level: mix, focus };
+        }
         if (part.thing) { // a level inside the thing: the die, a transistor
-          const inner = thingLevel(THING[part.thing], k => { if (current() === inner) dive(k); });
+          const inner = thingLevel(THING[part.thing], k => { if (current() === inner) dive(k); }, level.lookup);
           inner.lookup = level.lookup;
           inner.partOf = { thing: level.thing, part };
           return { level: inner, focus: level.partPosition(i) };
         }
-        const entry = level.lookup(part.child);
+        const entry = level.lookup(part.made ? part.made[0][0] : part.child);
         const lvl = buildMoleculeLevel(buildModel(entry), mode);
         lvl.partOf = { thing: level.thing, part: level.parts[i] };
-        return { level: lvl, focus: level.thing.parts ? level.partPosition(i) : new THREE.Vector3() };
+        return { level: lvl, focus };
+      };
+    } else if (level.kind === 'mixture') {
+      level.next = choice => {
+        const i = typeof choice === 'number' ? choice : 0;
+        const lvl = buildMoleculeLevel(buildModel(level.members[i].entry), mode);
+        lvl.partOf = { thing: level.partOf.thing, part: { ...level.part, label: level.part.label, note: `${level.members[i].share}% of it by weight.` } };
+        return { level: lvl, focus: level.members[i].group.position.clone() };
       };
     } else if (level.kind === 'snowflake') {
       level.next = () => ({ level: buildMoleculeLevel(buildModel(level.ice), mode), focus: new THREE.Vector3() });
@@ -392,8 +406,50 @@ export function createStage(container, events = {}) {
     setRoot(level);
   }
 
+  // A material made of several others (stainless steel, the chip's package): each one side by side at
+  // true relative size, labelled with its share, and each can be dived into
+  function mixtureLevel(part, lookup) {
+    const group = new THREE.Group();
+    const members = part.made.map(([key, share]) => {
+      const entry = lookup(key);
+      const lvl = buildMoleculeLevel(buildModel(entry), mode);
+      lvl.born = clock.elapsedTime;
+      return { key, share, entry, lvl, group: lvl.group };
+    });
+    const biggest = Math.max(...members.map(m => m.lvl.radius));
+    const s = 2.6 / biggest, gap = 0.9;
+    let x = 0;
+    const widths = members.map(m => m.lvl.radius * s);
+    const total = widths.reduce((a, w) => a + 2 * w, 0) + gap * (members.length - 1);
+    x = -total / 2;
+    const labels = [];
+    members.forEach((m, i) => {
+      x += widths[i];
+      m.group.scale.setScalar(s);
+      m.group.position.set(x, 1.1, 0);
+      group.add(m.group);
+      const el = document.createElement('button');
+      el.type = 'button';
+      el.className = 'hotspot mix';
+      el.innerHTML = `<span><b>${m.entry.name}</b> ${m.share}%</span><span class="badges">${elementBadges(partElements({ child: m.key }, lookup))}</span>`;
+      el.title = `Zoom into the ${m.entry.name.toLowerCase()}`;
+      el.addEventListener('click', e => { e.stopPropagation(); if (current() === level) dive(i); });
+      const o = new CSS2DObject(el);
+      o.position.set(x, 1.1 + widths[i] + 0.35, 0); // above each material, clear of the title below
+      group.add(o);
+      labels.push(el);
+      x += widths[i] + gap;
+    });
+    const level = {
+      kind: 'mixture', part, members, group, radius: Math.max(total / 2, 3) * 1.08, metresPerUnit: 1e-10 / s,
+      update(t) { members.forEach(m => m.lvl.update(t)); },
+      fade(f) { members.forEach(m => m.lvl.fade(f)); labels.forEach(l => { l.style.opacity = f; l.style.visibility = f > 0.05 ? '' : 'hidden'; }); },
+    };
+    return level;
+  }
+
   function showThing(thing, lookup) {
-    const level = thingLevel(thing, i => { if (current() === level) dive(i); });
+    const level = thingLevel(thing, i => { if (current() === level) dive(i); }, lookup);
     level.lookup = lookup;
     level.childEntry = lookup(thing.child);
     setRoot(level);
@@ -532,6 +588,7 @@ export function createStage(container, events = {}) {
   }
 
   function emitLevels() {
+    events.onPush?.(0, 0); // a finished dive clears the scroll-to-dive hint, which otherwise kept its old text
     events.onLevels?.(levels, current());
   }
 
@@ -638,41 +695,61 @@ export function createStage(container, events = {}) {
 
   const dashed = new THREE.LineDashedMaterial({ color: 0xf2b45a, dashSize: 0.18, gapSize: 0.12, transparent: true, opacity: 0.95, depthTest: false });
   const selMat = new THREE.MeshBasicMaterial({ color: 0xf2b45a, transparent: true, opacity: 0.9, depthTest: false, side: THREE.DoubleSide });
+  // Selected atoms: a ring sized to the atom as drawn, and a number tag (1, 2, 3); dashed lines between them
+  // with the distance, and the angle at the middle atom. The full readout goes to the page (onMeasure).
+  function atomDrawnRadius(lvl, sym) {
+    const el = element(sym);
+    return lvl.style === 'space' ? el.vdw : lvl.style === 'ball' ? 0.28 * el.vdw : lvl.style === 'stick' ? 0.16 : el.covalent * 0.7;
+  }
   function drawMeasure() {
     const lvl = current();
-    if (!lvl || lvl.kind !== 'molecule') return;
+    if (!lvl || lvl.kind !== 'molecule') { events.onMeasure?.(null); return; }
     const g = lvl.measure;
     g.children.slice().forEach(o => { g.remove(o); if (o.isCSS2DObject) o.element.remove(); o.geometry?.dispose(); });
     const atoms = selection.map(i => lvl.mol.atoms[i]);
-    atoms.forEach(a => {
-      const r = Math.max(0.5, element(a.symbol).covalent * 0.95) * (lvl.style === 'space' ? 2.1 : 1.15);
-      const ring = new THREE.Mesh(new THREE.RingGeometry(r, r * 1.08, 64), selMat);
+    atoms.forEach((a, n) => {
+      const r = Math.max(0.3, atomDrawnRadius(lvl, a.symbol)) * 1.22;
+      const ring = new THREE.Mesh(new THREE.RingGeometry(r, r * 1.07, 64), selMat);
       ring.position.copy(a.pos);
       ring.renderOrder = 10;
       ring.userData.billboard = true;
       g.add(ring);
+      const tag = document.createElement('div');
+      tag.className = 'measure-tag';
+      tag.textContent = String(n + 1);
+      const o = new CSS2DObject(tag);
+      o.position.copy(a.pos).add(new THREE.Vector3(0, r * 0.95, 0));
+      g.add(o);
     });
+    const report = { atoms: atoms.map((a, n) => ({ n: n + 1, symbol: a.symbol, name: element(a.symbol).name })), distances: [], angle: null };
     for (let k = 1; k < atoms.length; k++) {
       const geo = new THREE.BufferGeometry().setFromPoints([atoms[k - 1].pos, atoms[k].pos]);
       const line = new THREE.Line(geo, dashed);
       line.computeLineDistances();
       line.renderOrder = 10;
       g.add(line);
+      const d = atoms[k - 1].pos.distanceTo(atoms[k].pos);
+      const bonded = atoms[k - 1].bonds.some(bd => (bd.a === atoms[k].i || bd.b === atoms[k].i) && bd.order > 0);
+      report.distances.push({ from: k, to: k + 1, d, bonded });
       const div = document.createElement('div');
       div.className = 'measure-label';
-      div.textContent = `${atoms[k - 1].pos.distanceTo(atoms[k].pos).toFixed(2)} Å`;
+      div.innerHTML = `<small>${k}–${k + 1}</small> ${d.toFixed(2)} Å`;
       const lbl = new CSS2DObject(div);
       lbl.position.lerpVectors(atoms[k - 1].pos, atoms[k].pos, 0.5);
       g.add(lbl);
     }
     if (atoms.length === 3) {
+      report.angle = angleAt(atoms[0].pos, atoms[1].pos, atoms[2].pos);
       const div = document.createElement('div');
       div.className = 'measure-label angle';
-      div.textContent = `${angleAt(atoms[0].pos, atoms[1].pos, atoms[2].pos).toFixed(1)}°`;
+      div.innerHTML = `<small>at 2</small> ${report.angle.toFixed(1)}°`;
       const lbl = new CSS2DObject(div);
-      lbl.position.copy(atoms[1].pos);
+      // just outside the angle, away from the two bonds, so it never sits on the atom
+      const out = atoms[1].pos.clone().sub(atoms[0].pos).normalize().add(atoms[1].pos.clone().sub(atoms[2].pos).normalize()).normalize();
+      lbl.position.copy(atoms[1].pos).addScaledVector(out, atomDrawnRadius(lvl, atoms[1].symbol) * 1.25);
       g.add(lbl);
     }
+    events.onMeasure?.(atoms.length ? report : null);
   }
   const angleAt = (a, b, c) => THREE.MathUtils.radToDeg(a.clone().sub(b).angleTo(c.clone().sub(b)));
 

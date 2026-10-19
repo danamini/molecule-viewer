@@ -33,7 +33,7 @@ Chains in use:
 - periodic table → atom → …
 - particle zoo → particle → Planck length
 - snowflake → ice → water molecule → …
-- journey object → part's material (a molecule or crystal) → atom → …
+- journey object → part's material (a molecule or crystal), or a mixture of materials → atom → …
 - Z80 → die → transistor → material → …
 
 ## Adding things
@@ -44,8 +44,8 @@ Chains in use:
   `CRYSTALS`, rebuild.
 - **A journey:** add an entry to `THINGS` in `js/things.js` with a `model()` function, size in metres,
   the library key of its material, a blurb and stats. For hotspots, call `anchor(g, key, x, y, z)` in the
-  model and list `parts`, each with a `child` library key or a `thing` key for a deeper drawn level
-  (see `INNER`).
+  model and list `parts`, each with a `child` library key, a `thing` key for a deeper drawn level
+  (see `INNER`), or `made: [[key, percent], ...]` for a mixture of several materials.
 - **A table view:** add an entry to `TABLE_VIEWS` in `js/worlds.js` returning `{ color, rise, lit, scale }`
   for each element.
 

@@ -25,14 +25,16 @@ the scale kept human all the way down.
 - **Journeys from real things.** A snowflake, a grain of salt, a diamond, a quartz crystal on its rock,
   pencil lead, a gold ring, a modern computer chip, a Zilog Z80 and a cup of coffee, lit as studio
   objects. Composite things carry labelled hotspots: zoom into the chip's bond wire and land in gold, the
-  coffee's spoon and land in iron.
+  coffee's caffeine and land in the molecule. Each hotspot shows the elements its part contains, and a
+  part made of several materials (18/8 stainless steel, the chip's silica-filled package, 18-carat gold)
+  opens a mixture view with each material and its share, side by side.
 - **The Z80, all the way down.** The 40-pin package, then the die with its blocks labelled (decode PLA,
   control, timing, incrementer, register file, ALU), then one NMOS transistor cut open and switching,
   then each of its materials.
-- **Real molecules.** 53 molecules with PubChem's computed 3D coordinates and 10 crystal lattices built
+- **Real molecules.** 53 molecules with PubChem's computed 3D coordinates and 13 crystal lattices built
   from measured cell parameters, plus live search across PubChem's 100+ million compounds. Draw them as
-  shimmering electron clouds, ball and stick, space filling or skeleton; click atoms to measure distances
-  and angles.
+  shimmering electron clouds, ball and stick, space filling or skeleton; click atoms to measure: numbered
+  tags on the atoms and a readout of each distance and the angle.
 - **Below the molecule.** Atoms show their real electron configuration as orbitals (hydrogen-like,
   scaled by Slater's rules), the nucleus its true proton and neutron counts (enlarged, or at true size),
   nucleons their quarks, electrons their field, and the Planck length Wheeler's quantum foam, labelled

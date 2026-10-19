@@ -435,3 +435,38 @@ body.on-intro .corner-card, body.cinema .corner-card { display: none; }
   color: #fff; background: color-mix(in srgb, var(--c) 30%, rgba(8, 12, 22, 0.8)); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--c) 65%, transparent); }
 .chapter .icons .mini:hover { background: color-mix(in srgb, var(--c) 55%, rgba(8, 12, 22, 0.8)); }
 .chapter .icons .mini sub { font-size: 0.6em; }
+
+/* what a part is made of: the hotspot's dot in its main element's colour, element badges beside it */
+.labels .hotspot i { background: var(--c, var(--amber)); box-shadow: 0 0 0 4px color-mix(in srgb, var(--c, var(--amber)) 25%, transparent); }
+.labels .hotspot { border-color: color-mix(in srgb, var(--c, var(--amber)) 55%, transparent); }
+.badges { display: inline-flex; gap: 2px; margin-left: 2px; }
+.el-badge { display: inline-grid; place-items: center; min-width: 19px; height: 17px; padding: 0 3px; border-radius: 4px; font: 700 10.5px/1 var(--body);
+  color: #fff; background: color-mix(in srgb, var(--c) 45%, #0b1020); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--c) 80%, transparent); }
+.el-badge.more { --c: #8b96aa; }
+
+/* measuring */
+.measure-tag { font: 700 12px/1 var(--body); color: var(--amber-ink); background: var(--amber); width: 20px; height: 20px; border-radius: 50%;
+  display: grid; place-items: center; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5); transform: translateY(-12px); }
+.measure-label small { font-weight: 500; opacity: 0.7; margin-right: 3px; }
+.measure-label.angle { transform: none; }
+.measure-card { position: fixed; z-index: 7; top: calc(var(--top-h) + 8px); left: 50%; transform: translateX(-50%); width: min(380px, 92vw);
+  padding: 12px 14px; border-radius: 14px; background: var(--glass-strong); border: 1px solid rgba(242, 180, 90, 0.45);
+  -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px); box-shadow: 0 14px 40px rgba(0, 0, 0, 0.45); }
+.measure-card[hidden] { display: none; }
+.mc-head { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
+.mc-head > b { color: var(--amber); font-weight: 600; }
+.mc-head span { color: var(--dim); font-size: 13px; }
+.mc-head span i { font-style: normal; display: inline-grid; place-items: center; width: 16px; height: 16px; border-radius: 50%; background: var(--amber); color: var(--amber-ink); font-size: 10px; font-weight: 700; margin: 0 3px 0 6px; }
+.mc-head button { margin-left: auto; background: none; border: 1px solid var(--rule-strong); color: var(--dim); border-radius: 8px; padding: 3px 9px; cursor: pointer; font-size: 12px; }
+.mc-row { display: grid; grid-template-columns: 1fr auto 70px; gap: 10px; align-items: baseline; padding: 5px 0; border-top: 1px solid var(--rule); }
+.mc-row span small, .mc-row > small { color: var(--faint); font-size: 12px; }
+.mc-row b { font: 700 18px var(--display); letter-spacing: 0.02em; }
+.mc-row > small { text-align: right; }
+.measure-card p { margin: 6px 0 0; color: var(--faint); font-size: 12px; }
+/* mixtures */
+.labels .hotspot.mix { transform: translate(-50%, -100%); --c: var(--amber); }
+.labels .hotspot.mix b { font-weight: 600; }
+.part .badges { vertical-align: 1px; margin-left: 4px; }
+.part .mixline { color: var(--amber) !important; }
+.share-bar { display: flex; gap: 2px; height: 8px; border-radius: 4px; overflow: hidden; }
+.share-bar i { background: hsl(calc(30 + var(--h) * 1deg) 70% 60%); }
