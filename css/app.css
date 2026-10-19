@@ -332,9 +332,9 @@ body.cinema .trail { left: var(--pad); }
 }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
-  /* electrons keep circling, just slowly, the same way Spin turns slowly rather than stopping */
-  .bohr .orbit { animation-duration: 30s !important; }
-  .bohr .orbit.outer { animation-duration: 22s !important; }
+  /* the electrons in the atom diagrams keep their own pace: a small, steady circling that is part of the
+     explanation, not decoration (each orbit's duration is set inline, 5 to 14 s a turn) */
+  .bohr .orbit { animation-duration: var(--orbit, 8s) !important; }
 }
 
 /* the periodic table's hover card */

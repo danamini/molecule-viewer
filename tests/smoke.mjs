@@ -221,6 +221,14 @@ await test('mixtures show each material and dive into one', async page => {
   expect(await page.evaluate(() => viewer.stage.current.members.map(m => m.key).join()) === 'gold,silver,copper', '18-carat gold');
 });
 
+await test('element cards in a molecule, with orbiting electrons', async page => {
+  await go(page, 'caffeine', 2500);
+  const cards = await page.$$eval('.el-card', c => c.map(x => x.dataset.element).join(''));
+  expect(cards === 'CNOH', `caffeine's element cards: ${cards}`);
+  const durations = await page.$$eval('.el-card[data-element="C"] .orbit', g => g.map(x => getComputedStyle(x).animationDuration));
+  expect(durations.length === 2 && durations.every(d => parseFloat(d) >= 1), `orbits animate: ${durations}`);
+});
+
 await test('measuring reports distances and the angle', async page => {
   await go(page, 'water', 2500);
   await page.evaluate(() => { viewer.stage.toggleSelect(1); viewer.stage.toggleSelect(0); viewer.stage.toggleSelect(2); });

@@ -548,7 +548,7 @@ function bohr(sym) {
       const a = (k / count) * Math.PI * 2;
       return `<circle cx="${(60 + Math.cos(a) * r).toFixed(1)}" cy="${(60 + Math.sin(a) * r).toFixed(1)}" r="${count > 18 ? 1.3 : outer ? 2.6 : 2}"/>`;
     }).join('');
-    return `<circle class="ring${outer ? ' outer' : ''}" cx="60" cy="60" r="${r.toFixed(1)}"/><g class="orbit${outer ? ' outer' : ''}" style=""animation-duration:${(5 + i * 3).toFixed(1)}s;animation-direction:${i % 2 ? 'reverse' : 'normal'}">${dots}</g>`;
+    return `<circle class="ring${outer ? ' outer' : ''}" cx="60" cy="60" r="${r.toFixed(1)}"/><g class="orbit${outer ? ' outer' : ''}" style="--orbit:${(5 + i * 3).toFixed(1)}s;animation-duration:${(5 + i * 3).toFixed(1)}s;animation-direction:${i % 2 ? 'reverse' : 'normal'}">${dots}</g>`;
   }).join('');
   return `<svg class="bohr" viewBox="0 0 120 120" aria-hidden="true">${rings}<circle class="core" cx="60" cy="60" r="${Math.min(9, 4 + N)}"/></svg>`;
 }
