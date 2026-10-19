@@ -44,7 +44,9 @@ the scale kept human all the way down.
 - **The periodic table, reimagined.** 118 tiles that spiral in, and views that reshape it: weight
   (tiles rise as bars), gas/liquid/solid, what is in your body, atom sizes (tiles scale to each atom's
   radius), the library's molecules, elements made by people. Hover for an animated atom card; click to
-  fly inside. Each element links to the molecules it is in and where you meet it.
+  fly inside. Each element links to the molecules it is in and where you meet it. Its card (shells
+  with the bonding outer electrons highlighted, and how many bonds it usually makes) also appears for
+  each element inside a molecule and when you hover an atom.
 - **The particle zoo.** The Standard Model's 17 particles, each with mass, charge, spin and an icon.
 - **Surprise me and Tour** jump or tour at random through everything. Keyboard throughout (`?` lists the
   keys), phone layout, picture export, and every place has a shareable address

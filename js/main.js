@@ -348,7 +348,9 @@ function renderMolecule(level) {
     </dl>
     <div>
       <div class="comp-bar" role="img" aria-label="Share of mass by element">${comp.map(c => `<i style="flex:${c.share};background:${dotColor(c.el)}"></i>`).join('')}</div>
-      <ul class="comp-legend">${comp.map(c => `<li><button type="button" class="el-link" data-element="${c.s}"><span class="dot" style="color:${dotColor(c.el)};background:currentColor"></span><b>${c.el.name}</b> ${Math.round(c.share * 100)}%</button></li>`).join('')}</ul>
+      <p class="label-line" style="margin-top:12px">Elements in it</p>
+      <div class="el-cards">${comp.map(c => `<button type="button" class="el-card" data-element="${c.s}" style="--c:${hex(FAMILY_COLORS[c.el.family])}" title="Go inside ${esc(c.el.name.toLowerCase())}">
+        <span class="sym">${c.s}</span>${bohr(c.s)}<b>${esc(c.el.name)}</b><small>${c.n} atom${c.n > 1 ? 's' : ''}, ${Math.round(c.share * 100)}% of the mass</small></button>`).join('')}</div>
     </div>
     ${inIce ? '' : `<p class="hint-line">${ZOOM_IC}<span>Scroll in past the molecule, or double-click an atom, to go inside it: its orbitals, its nucleus, a proton.</span></p>`}
     ${mol.iupac ? `<p class="iupac">${esc(mol.iupac)}</p>` : ''}
@@ -540,19 +542,36 @@ function bohr(sym) {
   const N = shells.length, R = 52;
   const rings = shells.map((count, i) => {
     const r = 12 + (i + 1) * ((R - 12) / N);
+    const outer = i === N - 1; // the outer shell's electrons are the ones that make bonds
     const dots = Array.from({ length: count }, (_, k) => {
       const a = (k / count) * Math.PI * 2;
-      return `<circle cx="${(60 + Math.cos(a) * r).toFixed(1)}" cy="${(60 + Math.sin(a) * r).toFixed(1)}" r="${count > 18 ? 1.3 : 2}"/>`;
+      return `<circle cx="${(60 + Math.cos(a) * r).toFixed(1)}" cy="${(60 + Math.sin(a) * r).toFixed(1)}" r="${count > 18 ? 1.3 : outer ? 2.6 : 2}"/>`;
     }).join('');
-    return `<circle class="ring" cx="60" cy="60" r="${r.toFixed(1)}"/><g class="orbit" style="animation-duration:${(5 + i * 3).toFixed(1)}s;animation-direction:${i % 2 ? 'reverse' : 'normal'}">${dots}</g>`;
+    return `<circle class="ring${outer ? ' outer' : ''}" cx="60" cy="60" r="${r.toFixed(1)}"/><g class="orbit${outer ? ' outer' : ''}" style=""animation-duration:${(5 + i * 3).toFixed(1)}s;animation-direction:${i % 2 ? 'reverse' : 'normal'}">${dots}</g>`;
   }).join('');
   return `<svg class="bohr" viewBox="0 0 120 120" aria-hidden="true">${rings}<circle class="core" cx="60" cy="60" r="${Math.min(9, 4 + N)}"/></svg>`;
 }
-function elementCard(el, hover) {
+// How many bonds an element usually makes, from its outer electrons (main-group elements only)
+const TYPICAL_BONDS = { H: 1, B: 3, C: 4, N: 3, O: 2, F: 1, Si: 4, P: 3, S: 2, Cl: 1, Br: 1, I: 1 };
+const NOBLE = new Set(['He', 'Ne', 'Ar', 'Kr', 'Xe', 'Rn']);
+function bondLine(sym) {
+  const shells = [];
+  configuration(sym).forEach(([n, , e]) => { shells[n - 1] = (shells[n - 1] || 0) + e; });
+  const outer = shells[shells.length - 1];
+  if (NOBLE.has(sym)) return `Its outer shell is full, so it hardly bonds at all.`;
+  const b = TYPICAL_BONDS[sym];
+  if (!b) return `${outer} electron${outer > 1 ? 's' : ''} in its outer shell (highlighted).`;
+  const full = sym === 'H' ? 2 : 8;
+  return `${outer} outer electron${outer > 1 ? 's' : ''} (highlighted). It needs ${b} more to make ${full}, so it usually forms ${b} bond${b > 1 ? 's' : ''}.`;
+}
+
+function elementCard(el, hover, extra = '') {
   const col = hex(FAMILY_COLORS[el.family]);
   return `<div class="card" style="--c:${col}">
     <div class="card-head"><span class="big">${el.symbol}</span><span><b>${esc(el.name)}</b><small>${esc(el.family)}${el.predicted ? ' (predicted)' : ''}</small></span><span class="z">${el.Z}</span></div>
     ${bohr(el.symbol)}
+    <p class="bonds">${esc(bondLine(el.symbol))}</p>
+    ${extra}
     <dl><div><dt>Mass</dt><dd>${fmt(el.mass, 3)} u</dd></div><div><dt>Electrons per shell</dt><dd>${shellLine(el.symbol)}</dd></div></dl>
     ${hover && WHERE[el.symbol] ? `<p>${esc(WHERE[el.symbol])}</p>` : ''}
     ${hover ? '<p class="go">Click to go inside</p>' : ''}</div>`;
@@ -839,8 +858,10 @@ function showTip(h) {
   if (!h) { tip.hidden = true; return; }
   if (h.kind === 'atom') {
     const n = h.atom.bonds.filter(b => b.order > 0).length;
-    tip.innerHTML = `<div class="el"><b>${h.element.symbol}</b>${h.element.name}<span class="z">${h.element.Z}</span></div>
-      <p>${n ? `Bonded to ${n} atom${n > 1 ? 's' : ''}. ` : ''}Click to measure; double-click to go inside.</p>`;
+    const order = h.atom.bonds.reduce((t, b) => t + Math.max(0, b.order), 0);
+    const here = n ? `<p class="here">Here: bonded to ${n} atom${n > 1 ? 's' : ''}${order > n ? `, ${order} bonds counting double bonds twice` : ''}.</p>` : '';
+    tip.innerHTML = elementCard(h.element, false, here) + '<p class="tip-hint">Click to measure; double-click to go inside.</p>';
+    tip.classList.add('tile-tip');
   } else if (h.kind === 'part') {
     tip.innerHTML = h.part === 'nucleus'
       ? '<div class="el"><b>●</b>Nucleus</div><p>Click to go inside it.</p>'

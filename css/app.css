@@ -470,3 +470,20 @@ body.on-intro .corner-card, body.cinema .corner-card { display: none; }
 .part .mixline { color: var(--amber) !important; }
 .share-bar { display: flex; gap: 2px; height: 8px; border-radius: 4px; overflow: hidden; }
 .share-bar i { background: hsl(calc(30 + var(--h) * 1deg) 70% 60%); }
+
+/* outer electrons, the ones that bond */
+.bohr .orbit.outer { fill: var(--amber); }
+.bohr .ring.outer { stroke: rgba(242, 180, 90, 0.45); }
+.card p.bonds { margin: 4px 0 0; color: var(--text); font-size: 12.5px; }
+.card p.here { margin: 6px 0 0; color: var(--amber); font-size: 12.5px; }
+.tip-hint { margin: 6px 0 0 4px; color: var(--dim); font-size: 12px; text-shadow: 0 0 6px #000; }
+/* the elements in a molecule, as small cards */
+.el-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap: 6px; }
+.el-card { position: relative; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 8px 6px 9px; border-radius: 12px; cursor: pointer;
+  background: rgba(255, 255, 255, 0.03); border: 1px solid color-mix(in srgb, var(--c) 40%, transparent); color: var(--text); text-align: center; }
+.el-card:hover { border-color: var(--c); background: color-mix(in srgb, var(--c) 10%, transparent); }
+.el-card .sym { position: absolute; top: 6px; left: 9px; font: 800 20px/1 var(--display); color: var(--c); }
+.el-card .bohr { width: 74px; height: 74px; margin: 2px 0 0; }
+.el-card .bohr .ring { stroke: color-mix(in srgb, var(--c) 30%, transparent); }
+.el-card b { font-size: 13px; font-weight: 600; }
+.el-card small { color: var(--dim); font-size: 11px; line-height: 1.3; }
