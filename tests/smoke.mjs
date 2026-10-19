@@ -121,7 +121,7 @@ await test('electron and neutron choices from atom and nucleus', async page => {
 
 await test('periodic table: views, steady hover, keyboard', async page => {
   await go(page, 'table', 3800);
-  for (const v of ['mass', 'state', 'body', 'sizes', 'made', 'library', 'family']) {
+  for (const v of ['mass', 'state', 'body', 'block', 'sizes', 'made', 'library', 'family']) {
     await page.click(`[data-view="${v}"]`);
     expect(await page.evaluate(() => viewer.stage.current.view) === v, `view ${v}`);
   }
@@ -227,6 +227,15 @@ await test('element cards in a molecule, with orbiting electrons', async page =>
   expect(cards === 'CNOH', `caffeine's element cards: ${cards}`);
   const durations = await page.$$eval('.el-card[data-element="C"] .orbit', g => g.map(x => getComputedStyle(x).animationDuration));
   expect(durations.length === 2 && durations.every(d => parseFloat(d) >= 1), `orbits animate: ${durations}`);
+});
+
+await test('orbital shapes: show only one type', async page => {
+  await go(page, 'element-Fe', 4800);
+  await page.click('[data-orbital="d"]');
+  const vis = await page.evaluate(() => viewer.stage.current.data.subshells.filter(s => s.points.visible).map(s => s.label).join());
+  expect(vis === '3d', `only 3d visible, got ${vis}`);
+  await page.click('[data-orbital="d"]');
+  expect(await page.evaluate(() => viewer.stage.current.data.subshells.every(s => s.points.visible)), 'clicking again shows all');
 });
 
 await test('measuring reports distances and the angle', async page => {

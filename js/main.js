@@ -420,7 +420,15 @@ function renderAtom(level) {
       <li><button type="button" data-shell="${s.label}" aria-pressed="true" style="--c:${hex(ORBITAL_COLORS[L_LETTER[s.l]])}">
         <b>${s.label}</b>${s.electrons} e<small>${s.orbitals.length > 1 && s.orbitals.length < 6 ? s.orbitals.join(' ') : ''}</small></button></li>`).join('')}
     </ul>
-    <p class="legend-line"><span><span class="dot" style="color:var(--s);background:currentColor"></span> s spheres</span><span><span class="dot" style="color:var(--p);background:currentColor"></span> p dumbbells</span><span><span class="dot" style="color:var(--d);background:currentColor"></span> d clovers</span><span><span class="dot" style="color:var(--f);background:currentColor"></span> f</span></p>
+    <div><p class="label-line">Orbital shapes</p>
+    <div class="orb-cards">${'spdf'.split('').map(l => {
+      const mine = subshells.filter(sh => L_LETTER[sh.l] === l);
+      const e = mine.reduce((t, sh) => t + sh.electrons, 0);
+      return `<button type="button" class="orb-card${mine.length ? '' : ' absent'}" data-orbital="${l}" aria-pressed="true" style="--c:${hex(ORBITAL_COLORS[l])}" ${mine.length ? '' : 'disabled'}>
+        ${orbitalShape(l)}<b>${l} <span>${ORBITALS[l].shape}</span></b><small>${ORBITALS[l].count} orbital${ORBITALS[l].count > 1 ? 's' : ''}, up to ${ORBITALS[l].max} electrons</small>
+        <em>${mine.length ? `${e} here, in ${mine.map(sh => sh.label).join(', ')}` : 'none in this atom'}</em></button>`;
+    }).join('')}</div>
+    <p class="note" id="orbNote">${esc(ORBITALS.s.note)} ${esc(ORBITALS.p.note)} Click a shape to show only it.</p></div>
     <dl class="stats">
       <div><dt>Atomic number</dt><dd>${el.Z}</dd></div>
       <div><dt>Atomic mass</dt><dd>${fmt(el.mass, 3)}<small>u</small></dd></div>
@@ -440,6 +448,19 @@ function renderAtom(level) {
     const on = b.getAttribute('aria-pressed') !== 'true';
     b.setAttribute('aria-pressed', String(on));
     stage.setSubshellVisible(b.dataset.shell, on);
+  }));
+  $('#detailsBody').querySelectorAll('[data-orbital]').forEach(b => b.addEventListener('click', () => {
+    const l = b.dataset.orbital;
+    const solo = [...$('#detailsBody').querySelectorAll('[data-orbital]:not([disabled])')].every(x => x === b || x.getAttribute('aria-pressed') === 'true') && b.getAttribute('aria-pressed') === 'true';
+    // first click shows only this shape; clicking it again (when alone) shows them all
+    const allOn = !solo && [...$('#detailsBody').querySelectorAll('[data-orbital]:not([disabled])')].filter(x => x.getAttribute('aria-pressed') === 'true').length === 1 && b.getAttribute('aria-pressed') === 'true';
+    $('#detailsBody').querySelectorAll('[data-orbital]:not([disabled])').forEach(x => x.setAttribute('aria-pressed', String(allOn || x === b)));
+    subshells.forEach(sh => {
+      const on = allOn || L_LETTER[sh.l] === l;
+      stage.setSubshellVisible(sh.label, on);
+      $('#detailsBody').querySelector(`[data-shell="${sh.label}"]`)?.setAttribute('aria-pressed', String(on));
+    });
+    $('#orbNote').textContent = allOn ? 'All shapes shown. Click one to show only it.' : `${ORBITALS[l].note} Click it again to show every shape.`;
   }));
   $('#detailsBody').querySelectorAll('[data-truescale]').forEach(b => b.addEventListener('click', () => {
     stage.setTrueScale(b.dataset.truescale === '1');
@@ -552,6 +573,24 @@ function bohr(sym) {
   }).join('');
   return `<svg class="bohr" viewBox="0 0 120 120" aria-hidden="true">${rings}<circle class="core" cx="60" cy="60" r="${Math.min(9, 4 + N)}"/></svg>`;
 }
+// The four orbital shapes, drawn as they are usually shown: the surface inside which an electron spends
+// most of its time
+const ORBITALS = {
+  s: { shape: 'sphere', count: 1, max: 2, note: 's orbitals are spheres: the electron is equally likely in every direction.' },
+  p: { shape: 'dumbbell', count: 3, max: 6, note: 'p orbitals are dumbbells, three of them at right angles (along x, y and z), with the nucleus in the gap.' },
+  d: { shape: 'clover', count: 5, max: 10, note: 'd orbitals: four are four-leaf clovers, the fifth a dumbbell with a ring round its waist. They fill in the transition metals.' },
+  f: { shape: 'many lobes', count: 7, max: 14, note: 'f orbitals have six or eight lobes. They fill in the lanthanides and actinides, the two rows below the table.' },
+};
+function orbitalShape(l) {
+  const lobe = (a, len, w) => `<ellipse cx="30" cy="${30 - len / 2}" rx="${w}" ry="${len / 2}" transform="rotate(${a} 30 30)"/>`;
+  const body = l === 's' ? '<circle cx="30" cy="30" r="17"/>'
+    : l === 'p' ? lobe(0, 24, 8) + lobe(180, 24, 8)
+      : l === 'd' ? [45, 135, 225, 315].map(a => lobe(a, 22, 6.5)).join('')
+        : [0, 60, 120, 180, 240, 300].map(a => lobe(a, 21, 5)).join('');
+  return `<svg class="orb-shape" viewBox="0 0 60 60" aria-hidden="true"><defs><radialGradient id="og-${l}"><stop offset="0" stop-color="#fff" stop-opacity=".9"/><stop offset=".55" stop-color="currentColor" stop-opacity=".75"/><stop offset="1" stop-color="currentColor" stop-opacity=".25"/></radialGradient></defs><g fill="url(#og-${l})" stroke="currentColor" stroke-width=".8">${body}</g><circle cx="30" cy="30" r="2" fill="#f2b45a"/></svg>`;
+}
+const configHtml = sym => configuration(sym).map(([n, l, e]) => `<span style="color:${hex(ORBITAL_COLORS[L_LETTER[l]])}">${n}${L_LETTER[l]}<sup>${e}</sup></span>`).join(' ');
+
 // How many bonds an element usually makes, from its outer electrons (main-group elements only)
 const TYPICAL_BONDS = { H: 1, B: 3, C: 4, N: 3, O: 2, F: 1, Si: 4, P: 3, S: 2, Cl: 1, Br: 1, I: 1 };
 const NOBLE = new Set(['He', 'Ne', 'Ar', 'Kr', 'Xe', 'Rn']);
@@ -571,6 +610,7 @@ function elementCard(el, hover, extra = '') {
   return `<div class="card" style="--c:${col}">
     <div class="card-head"><span class="big">${el.symbol}</span><span><b>${esc(el.name)}</b><small>${esc(el.family)}${el.predicted ? ' (predicted)' : ''}</small></span><span class="z">${el.Z}</span></div>
     ${bohr(el.symbol)}
+    <p class="config">${el.Z > 54 ? configHtml(el.symbol).split(' ').slice(-4).join(' ') + ' <small>(outer)</small>' : configHtml(el.symbol)}</p>
     <p class="bonds">${esc(bondLine(el.symbol))}</p>
     ${extra}
     <dl><div><dt>Mass</dt><dd>${fmt(el.mass, 3)} u</dd></div><div><dt>Electrons per shell</dt><dd>${shellLine(el.symbol)}</dd></div></dl>

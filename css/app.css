@@ -490,3 +490,18 @@ body.on-intro .corner-card, body.cinema .corner-card { display: none; }
 .el-card .bohr .ring { stroke: color-mix(in srgb, var(--c) 30%, transparent); }
 .el-card b { font-size: 13px; font-weight: 600; }
 .el-card small { color: var(--dim); font-size: 11px; line-height: 1.3; }
+
+/* orbital shapes */
+.orb-cards { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; }
+.orb-card { display: flex; flex-direction: column; align-items: center; gap: 1px; padding: 6px 4px 7px; border-radius: 10px; cursor: pointer; color: var(--c);
+  background: rgba(255, 255, 255, 0.03); border: 1px solid color-mix(in srgb, var(--c) 45%, transparent); text-align: center; font: inherit; }
+.orb-card:hover:not([disabled]) { background: color-mix(in srgb, var(--c) 12%, transparent); }
+.orb-card[aria-pressed="false"] { opacity: 0.4; border-style: dashed; }
+.orb-card.absent { opacity: 0.32; cursor: default; }
+.orb-shape { width: 52px; height: 52px; }
+.orb-card b { font: 700 15px/1 var(--display); letter-spacing: 0.02em; color: var(--c); }
+.orb-card b span { font: 500 11px var(--body); color: var(--text); letter-spacing: 0; }
+.orb-card small { color: var(--dim); font-size: 11px; line-height: 1.3; }
+.orb-card em { font-style: normal; color: var(--text); font-size: 11.5px; line-height: 1.3; margin-top: 3px; }
+.card p.config { margin: 2px 0 0; text-align: center; font: 600 14px var(--body); letter-spacing: 0.02em; }
+.card p.config small { color: var(--faint); font-weight: 400; font-size: 11px; }

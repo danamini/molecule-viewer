@@ -178,6 +178,12 @@ export const TABLE_VIEWS = {
   body: { label: 'In your body', note: 'Height by share of your body’s mass, on a log scale: 65% oxygen, down to traces of cobalt and molybdenum.',
     of: el => BODY[el.symbol] ? { color: ramp((Math.log10(BODY[el.symbol]) + 5) / 7, [0x5a3cd8, 0xff7a9a, 0xffd36b]), rise: 0.15 + 0.32 * (Math.log10(BODY[el.symbol]) + 5), lit: true, scale: 0.5 + 0.075 * (Math.log10(BODY[el.symbol]) + 5) }
       : { color: new THREE.Color(0x283044), rise: 0, lit: false, scale: 0.42 } },
+  block: { label: 'Orbital blocks', note: 'Coloured by the orbital shape being filled. Two s columns, six p, ten d and fourteen f: s holds 2 electrons, p 6, d 10, f 14. That is why the table has the shape it does.',
+    of: el => {
+      const p = tablePosition(el.Z);
+      const l = p.f ? 'f' : el.Z === 2 || p.col <= 1 ? 's' : p.col >= 12 ? 'p' : 'd';
+      return { color: new THREE.Color({ s: 0x7cc4ff, p: 0xf2b45a, d: 0xe58cff, f: 0x8ef0b0 }[l]).offsetHSL(0, 0.25, -0.12), rise: { s: 0.15, p: 0.3, d: 0.45, f: 0.6 }[l], lit: true };
+    } },
   sizes: { label: 'Atom sizes', note: 'Each tile scaled to its atom’s true relative size (covalent radius). They shrink across each row as the nucleus pulls harder, and swell down each column as shells are added: caesium is eight times wider than hydrogen.',
     of: el => el.Z <= 96
       ? { color: new THREE.Color(FAMILY_COLORS[el.family]).offsetHSL(0, 0.3, -0.06), rise: 0.1, lit: true, scale: 0.22 + 0.78 * el.covalent / MAX_COV }

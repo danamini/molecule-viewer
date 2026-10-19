@@ -37,14 +37,14 @@ the scale kept human all the way down.
   shimmering electron clouds, ball and stick, space filling or skeleton; click atoms to measure: numbered
   tags on the atoms and a readout of each distance and the angle.
 - **Below the molecule.** Atoms show their real electron configuration as orbitals (hydrogen-like,
-  scaled by Slater's rules), the nucleus its true proton and neutron counts (enlarged, or at true size),
+  scaled by Slater's rules), with drawn s, p, d and f shapes to show one type at a time, the nucleus its true proton and neutron counts (enlarged, or at true size),
   nucleons their quarks, electrons their field, and the Planck length Wheeler's quantum foam, labelled
   as a guess.
 - **Scale you can feel.** A live magnification, a ruler from your height to 10⁻³⁵ m, and comparisons
   ("if this nucleus were as tall as you, the atom would be 100 km across").
 - **The periodic table, reimagined.** 118 tiles that spiral in, and views that reshape it: weight
-  (tiles rise as bars), gas/liquid/solid, what is in your body, atom sizes (tiles scale to each atom's
-  radius), the library's molecules, elements made by people. Hover for an animated atom card; click to
+  (tiles rise as bars), gas/liquid/solid, what is in your body, orbital blocks (s, p, d, f: why the table
+  has its shape), atom sizes (tiles scale to each atom's radius), the library's molecules, elements made by people. Hover for an animated atom card; click to
   fly inside. Each element links to the molecules it is in and where you meet it. Its card (shells
   with the bonding outer electrons highlighted, and how many bonds it usually makes) also appears for
   each element inside a molecule and when you hover an atom.
