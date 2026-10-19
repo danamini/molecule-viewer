@@ -292,7 +292,11 @@ function z80DieTexture() {
 
 function z80Chip() {
   const g = new THREE.Group();
-  const L = 9.4, W = 2.75, H = 0.72;                       // 52 × 15 × 4 mm, to scale
+  // To scale, from the 40-pin plastic DIP standard (JEDEC MO-015): body 52.3 × 14 × 4 mm, pins 2.54 mm
+  // apart, the two rows 15.24 mm (0.6") apart centre to centre. The die measures 3.55 × 3.35 mm.
+  const MM = 9.4 / 52.3;                                   // scene units per millimetre
+  const L = 52.3 * MM, W = 14.0 * MM, H = 4.0 * MM;
+  const ROW = 7.62 * MM, PITCH = 2.54 * MM, FIRST = (52.3 - 19 * 2.54) / 2 * MM;
   const epoxy = fading(new THREE.MeshStandardMaterial({ color: 0x141518, roughness: 0.7 }));
   const body = new THREE.Mesh(new RoundedBoxGeometry(L, W, H, 2, 0.08), epoxy);
   g.add(body);
@@ -318,15 +322,19 @@ function z80Chip() {
   const decal = new THREE.Mesh(new THREE.PlaneGeometry(L * 0.96, W * 0.92), fading(new THREE.MeshBasicMaterial({ map: mt, transparent: true, depthWrite: false })));
   decal.position.z = H / 2 + 0.004;
   g.add(decal);
-  // the decapped window: an etched pit, the die, gold fingers and bond wires
+  // the decapped window: an etched pit, the die, gold fingers and bond wires, built at a convenient size
+  // and scaled so the die comes out at its measured 3.55 × 3.35 mm
+  const decap = new THREE.Group();
+  decap.scale.set(3.55 * MM / 1.15, 3.55 * MM / 1.15, 1);
+  g.add(decap);
   const pit = new THREE.Mesh(new THREE.PlaneGeometry(2.3, 1.95), fading(new THREE.MeshStandardMaterial({ color: 0x2a2018, roughness: 0.95 })));
   pit.position.z = H / 2 + 0.006;
-  g.add(pit);
-  const die = new THREE.Mesh(new THREE.BoxGeometry(1.15, 1.24, 0.05), fading(new THREE.MeshPhysicalMaterial({
+  decap.add(pit);
+  const die = new THREE.Mesh(new THREE.BoxGeometry(1.15, 1.15 * 3.35 / 3.55, 0.05), fading(new THREE.MeshPhysicalMaterial({
     map: z80DieTexture(), metalness: 0.45, roughness: 0.3, iridescence: 0.7, iridescenceIOR: 1.6, iridescenceThicknessRange: [250, 700], envMapIntensity: 1.5,
   })));
   die.position.z = H / 2 + 0.04;
-  g.add(die);
+  decap.add(die);
   const gold = fading(new THREE.MeshStandardMaterial({ color: 0xe2bd62, metalness: 1, roughness: 0.25 }));
   const wireMat = fading(new THREE.MeshStandardMaterial({ color: 0xf2cf6a, metalness: 1, roughness: 0.2 }));
   for (const side of [-1, 1]) {
@@ -334,35 +342,40 @@ function z80Chip() {
       const px = -0.46 + k * 0.103, fx = -0.95 + k * 0.21;
       const finger = new THREE.Mesh(new THREE.BoxGeometry(0.07, 0.3, 0.015), gold);
       finger.position.set(fx, side * 0.86, H / 2 + 0.012);
-      g.add(finger);
-      const curve = new THREE.CatmullRomCurve3([new THREE.Vector3(px, side * 0.57, H / 2 + 0.07), new THREE.Vector3((px + fx) / 2, side * 0.68, H / 2 + 0.2), new THREE.Vector3(fx, side * 0.76, H / 2 + 0.02)]);
-      g.add(new THREE.Mesh(new THREE.TubeGeometry(curve, 10, 0.006, 5), wireMat));
+      decap.add(finger);
+      const curve = new THREE.CatmullRomCurve3([new THREE.Vector3(px, side * 0.52, H / 2 + 0.07), new THREE.Vector3((px + fx) / 2, side * 0.66, H / 2 + 0.2), new THREE.Vector3(fx, side * 0.76, H / 2 + 0.02)]);
+      decap.add(new THREE.Mesh(new THREE.TubeGeometry(curve, 10, 0.01, 5), wireMat));
     }
   }
-  // 40 through-hole leads, 2.54 mm apart, each one piece: out of the body's side at mid-height, a short
-  // flat step, a bend, a wide shoulder down to the board, then a narrow pin through it
+  // 40 through-hole leads, each one flat stamped strip (0.25 mm thick): out of the body's side at mid-height,
+  // a short step out to the row line, a bend, then down: 1.52 mm wide to the seating plane, tapering to a
+  // 0.46 mm pin that goes through the board
   const tin = fading(new THREE.MeshPhysicalMaterial({ color: 0xd4d8de, metalness: 1, roughness: 0.3 }));
-  const boardTop = -0.56;
-  const tab = new THREE.BoxGeometry(0.27, 0.34, 0.05);           // runs out of the body
-  const shoulderGeo = new THREE.BoxGeometry(0.27, 0.05, 0.56);   // the wide part, down to the board
-  const pinGeo = new THREE.BoxGeometry(0.1, 0.05, 0.62);         // through the board
-  const pitch = L / 20.5;
+  const boardTop = -0.56, T = 0.25 * MM, WIDE = 1.52 * MM, PIN = 0.46 * MM;
+  const tab = new THREE.BoxGeometry(WIDE, ROW - W / 2 + 0.06 + T / 2, T);
+  const outline = new THREE.Shape();
+  const taperTop = boardTop + 0.1, pinEnd = boardTop - 0.5;
+  outline.moveTo(-WIDE / 2, 0); outline.lineTo(WIDE / 2, 0); outline.lineTo(WIDE / 2, taperTop);
+  outline.lineTo(PIN / 2, boardTop); outline.lineTo(PIN / 2, pinEnd); outline.lineTo(-PIN / 2, pinEnd);
+  outline.lineTo(-PIN / 2, boardTop); outline.lineTo(-WIDE / 2, taperTop); outline.closePath();
+  const strip = new THREE.ExtrudeGeometry(outline, { depth: T, bevelEnabled: false });
+  // the outline is drawn in x and height and extruded along its thickness: swap so height runs along the
+  // scene's z (up out of the board) and thickness along y, then centre the thickness on the row line
+  strip.applyMatrix4(new THREE.Matrix4().set(1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 1));
+  strip.translate(0, -T / 2, 0);
   for (const side of [-1, 1]) {
     for (let k = 0; k < 20; k++) {
-      const x = -L / 2 + pitch * (k + 0.75);
-      const yOut = side * (W / 2 + 0.26);
+      const x = -L / 2 + FIRST + k * PITCH;
       const t = new THREE.Mesh(tab, tin);
-      t.position.set(x, side * (W / 2 + 0.11), 0);               // starts inside the body, so it is joined
-      const sh = new THREE.Mesh(shoulderGeo, tin);
-      sh.position.set(x, yOut, -0.26);
-      const pn = new THREE.Mesh(pinGeo, tin);
-      pn.position.set(x, yOut, boardTop - 0.2);
-      g.add(t, sh, pn);
+      t.position.set(x, side * ((W / 2 - 0.06 + ROW + T / 2) / 2), 0);   // starts inside the body, so it is joined
+      const st = new THREE.Mesh(strip, tin);
+      st.position.set(x, side * ROW, 0);
+      g.add(t, st);
     }
   }
   // the circuit board it is soldered to: green FR-4, a copper pad round every pin, traces leading away
   const BW = 12.6, BH = 7.8, pads = [];
-  for (const side of [-1, 1]) for (let k = 0; k < 20; k++) pads.push([-L / 2 + pitch * (k + 0.75), side * (W / 2 + 0.26), side, k]);
+  for (const side of [-1, 1]) for (let k = 0; k < 20; k++) pads.push([-L / 2 + FIRST + k * PITCH, side * ROW, side, k]);
   const bc = document.createElement('canvas');
   bc.width = 2048; bc.height = Math.round(2048 * BH / BW);
   const bx = bc.getContext('2d');
@@ -429,11 +442,11 @@ function z80Chip() {
     const r = new THREE.Mesh(ring, copper); r.position.set(x, y, boardTop - 0.283); g.add(r);
     const u = new THREE.Mesh(under, solder); u.position.set(x, y, boardTop - 0.36); g.add(u);
   });
-  anchor(g, 'trace', 4.6, -(W / 2 + 0.26 + 0.42 + 3 * 0.165), boardTop + 0.01);
+  anchor(g, 'trace', 4.6, -(ROW + 0.42 + 3 * 0.165), boardTop + 0.01);
   anchor(g, 'board', 5.7, W / 2 + 2.9, boardTop + 0.01);
-  anchor(g, 'die', 0.25, 0.2, H / 2 + 0.07);
-  anchor(g, 'wire', -1.05, -0.95, H / 2 + 0.05);
-  anchor(g, 'legs', -3.3, -(W / 2 + 0.26), -0.3);
+  anchor(g, 'die', -0.15, 0.16, H / 2 + 0.07);
+  anchor(g, 'wire', 0.32, -0.4, H / 2 + 0.08);
+  anchor(g, 'legs', -3.3, -ROW, -0.3);
   anchor(g, 'package', 3.2, 0.6, H / 2);
   g.rotation.set(-0.95, 0, 0.32);
   g.scale.setScalar(0.74);
@@ -652,7 +665,7 @@ export const THINGS = [
     parts: [
       { key: 'die', label: 'Silicon die', thing: 'z80-die', note: 'Every transistor of the Z80, on one sliver of silicon. Zoom in to see its parts.' },
       { key: 'wire', label: 'Gold bond wire', child: 'gold', note: 'Forty of them, each finer than a hair.' },
-      { key: 'legs', label: 'Legs', child: 'copper', note: 'Copper alloy, tin-plated, 2.54 mm apart.' },
+      { key: 'legs', label: 'Legs', child: 'copper', note: 'Usually a tin-plated copper alloy (some packages used an iron–nickel alloy), 2.54 mm apart.' },
       { key: 'package', label: 'Black package', made: [['quartz', 80], ['epoxy', 20]], note: 'Epoxy resin filled with silica, about four fifths silica by weight.' },
       { key: 'trace', label: 'Copper trace', child: 'copper', note: 'The board’s wiring, carrying signals to and from each pin.' },
       { key: 'board', label: 'Circuit board', made: [['quartz', 60], ['epoxy', 40]], note: 'FR-4: woven glass fibre (silica, like quartz but disordered) set in epoxy resin.' },
@@ -671,11 +684,11 @@ export const THINGS = [
 // levels inside things, reached only by zooming in
 const BLOCK = note => ({ thing: 'nmos', note });
 export const INNER = [
-  { key: 'z80-die', name: 'Z80 die', title: 'The Z80 die', size: 4e-3, model: z80DieModel, formula: 'Si', inner: true,
+  { key: 'z80-die', name: 'Z80 die', title: 'The Z80 die', size: 3.55e-3, model: z80DieModel, formula: 'Si', inner: true,
     note: 'Every part of the processor, on one sliver of silicon',
     blurb: 'The whole processor on a sliver of silicon about the size of a lentil. Control sits above; the datapath (incrementer, registers, ALU) runs along the bottom, every block one bit-slice wide per bit. Together they fetch an instruction, decode it and carry it out, a few hundred thousand times a second.',
     source: 'Datapath layout after Ken Shirriff’s reverse engineering of Z80 die photos (righto.com); the control area is drawn schematically.',
-    stats: [['Transistors', '8,500', ''], ['Smallest features', '~4', 'µm'], ['Instructions', '~158', 'types'], ['Bond pads', '40', '']],
+    stats: [['Transistors', '8,500', ''], ['Die', '3.55 × 3.35', 'mm'], ['Instructions', '~158', 'types'], ['Bond pads', '40', '']],
     parts: [
       { key: 'pla', label: 'Decode PLA', ...BLOCK('A regular grid of transistor sites that turns each instruction byte into the control signals it needs.') },
       { key: 'control', label: 'Control logic', ...BLOCK('Random logic that steps each instruction through its machine cycles: fetch, read memory, write back.') },
