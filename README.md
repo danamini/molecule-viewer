@@ -108,6 +108,11 @@ Google Gemini; this version was rebuilt in conversation with Anthropic's Claude.
 chemistry or physics, so checking how accurate the results are has been part of the experiment. The data
 is sourced and credited above so anyone can check it, and corrections are welcome.
 
+## Contributing
+
+Issues and pull requests are welcome, especially corrections with a source. See
+[CONTRIBUTING.md](CONTRIBUTING.md).
+
 ## License
 
 This project is licensed under the MIT License. See the LICENSE file for details.
