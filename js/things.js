@@ -308,8 +308,10 @@ function z80Chip() {
   const m = mk.getContext('2d');
   m.fillStyle = 'rgba(205,208,214,0.85)';
   m.font = '700 92px "IBM Plex Sans", sans-serif'; m.fillText('ZILOG', 150, 190);
-  m.font = '600 78px "IBM Plex Sans", sans-serif'; m.fillText('Z8400A PS', 150, 330);
-  m.font = '600 70px "IBM Plex Sans", sans-serif'; m.fillText('Z80 CPU', 1500, 330); m.fillText('8215', 1560, 470);
+  // Zilog's real part number for the original 2.5 MHz Z80 (Z8400; 'A' would mean the later 4 MHz part),
+  // P = plastic package, S = standard temperature range. No date code: any one we chose would be invented.
+  m.font = '600 78px "IBM Plex Sans", sans-serif'; m.fillText('Z8400 PS', 150, 330);
+  m.font = '600 70px "IBM Plex Sans", sans-serif'; m.fillText('Z80 CPU', 1500, 330);
   m.beginPath(); m.arc(80, 520, 26, 0, 6.3); m.fillStyle = 'rgba(0,0,0,0.7)'; m.fill();
   const mt = new THREE.CanvasTexture(mk);
   mt.colorSpace = THREE.SRGBColorSpace;
@@ -359,43 +361,76 @@ function z80Chip() {
     }
   }
   // the circuit board it is soldered to: green FR-4, a copper pad round every pin, traces leading away
-  const BW = 12.6, BH = 6.8, pads = [];
-  for (const side of [-1, 1]) for (let k = 0; k < 20; k++) pads.push([-L / 2 + pitch * (k + 0.75), side * (W / 2 + 0.26)]);
+  const BW = 12.6, BH = 7.8, pads = [];
+  for (const side of [-1, 1]) for (let k = 0; k < 20; k++) pads.push([-L / 2 + pitch * (k + 0.75), side * (W / 2 + 0.26), side, k]);
   const bc = document.createElement('canvas');
   bc.width = 2048; bc.height = Math.round(2048 * BH / BW);
   const bx = bc.getContext('2d');
   const U = (x) => (x / BW + 0.5) * bc.width, V = (y) => (0.5 - y / BH) * bc.height;
+  const px = bc.width / BW; // texture pixels per scene unit
   bx.fillStyle = '#0d3a26'; bx.fillRect(0, 0, bc.width, bc.height);
-  bx.strokeStyle = '#3c8a58'; bx.lineWidth = 9; bx.lineCap = 'round'; bx.lineJoin = 'round';
-  pads.forEach(([x, y], i) => {          // each pad's trace runs away from the chip, then turns
-    const dir = Math.sign(y), k = i % 20;
-    bx.beginPath(); bx.moveTo(U(x), V(y));
-    bx.lineTo(U(x), V(y + dir * (0.5 + (k % 5) * 0.18)));
-    bx.lineTo(U(x + (k < 10 ? -1 : 1) * (0.8 + (k % 5) * 0.3)), V(y + dir * (1.2 + (k % 5) * 0.18)));
+  // traces routed like a real two-row DIP fan-out: straight out from the pad, a 45° bend into a lane of
+  // its own, then parallel to the board edge, ending in a via. Pins at the ends of each row take the lanes
+  // nearest the chip, inner pins the outer lanes, so no two traces ever cross.
+  const lane0 = 0.42, laneGap = 0.165, jog = 0.22;
+  bx.strokeStyle = '#3c8a58'; bx.lineWidth = 0.075 * px; bx.lineCap = 'round'; bx.lineJoin = 'round';
+  const vias = [];
+  for (const [x, y, side, k] of pads) {
+    const left = k < 10, idx = left ? k : 19 - k;
+    const yl = y + side * (lane0 + idx * laneGap);
+    const dirX = left ? -1 : 1;
+    const xEnd = dirX * (BW / 2 - 0.45 - (idx % 2) * 0.32);   // vias staggered in two columns
+    bx.beginPath();
+    bx.moveTo(U(x), V(y));
+    bx.lineTo(U(x), V(yl - side * jog));
+    bx.lineTo(U(x + dirX * jog), V(yl));
+    bx.lineTo(U(xEnd), V(yl));
     bx.stroke();
+    vias.push([xEnd, yl]);
+  }
+  vias.forEach(([x, y]) => {
+    bx.fillStyle = '#d8b46a'; bx.beginPath(); bx.arc(U(x), V(y), 0.07 * px, 0, 6.3); bx.fill();
+    bx.fillStyle = '#0a1a10'; bx.beginPath(); bx.arc(U(x), V(y), 0.03 * px, 0, 6.3); bx.fill();
   });
   pads.forEach(([x, y]) => {
-    bx.fillStyle = '#d8b46a'; bx.beginPath(); bx.arc(U(x), V(y), 22, 0, 6.3); bx.fill();   // copper pad, tinned
-    bx.fillStyle = '#1a1208'; bx.beginPath(); bx.arc(U(x), V(y), 8, 0, 6.3); bx.fill();
+    bx.fillStyle = '#d8b46a'; bx.beginPath(); bx.arc(U(x), V(y), 0.12 * px, 0, 6.3); bx.fill();   // copper pad, tinned
+    bx.fillStyle = '#1a1208'; bx.beginPath(); bx.arc(U(x), V(y), 0.045 * px, 0, 6.3); bx.fill();
   });
-  bx.strokeStyle = 'rgba(235,240,240,0.8)'; bx.lineWidth = 4;
-  bx.strokeRect(U(-L / 2 - 0.1), V(W / 2 + 0.55), U(L / 2 + 0.1) - U(-L / 2 - 0.1), V(-W / 2 - 0.55) - V(W / 2 + 0.55));
-  bx.fillStyle = 'rgba(235,240,240,0.85)'; bx.font = '600 56px "IBM Plex Sans", sans-serif';
-  bx.fillText('U1  Z80 CPU', U(-L / 2), V(W / 2 + 0.75));
+  // silkscreen: the chip's outline (notch at pin 1's end) and its reference
+  bx.strokeStyle = 'rgba(235,240,240,0.8)'; bx.lineWidth = 0.025 * px;
+  bx.strokeRect(U(-L / 2), V(W / 2), U(L / 2) - U(-L / 2), V(-W / 2) - V(W / 2));
+  bx.beginPath(); bx.arc(U(-L / 2), V(0), 0.28 * px, -Math.PI / 2, Math.PI / 2); bx.stroke();
+  bx.fillStyle = 'rgba(235,240,240,0.85)'; bx.font = `600 ${Math.round(0.26 * px)}px "IBM Plex Sans", sans-serif`;
+  bx.fillText('U1  Z80 CPU', U(-L / 2 + 0.2), V(W / 2 + lane0 + 10 * laneGap + 0.25));
   const btex = new THREE.CanvasTexture(bc);
   btex.colorSpace = THREE.SRGBColorSpace;
   btex.anisotropy = 8;
+  // the board itself plain; its printed top face a separate sheet, so the underside stays plain
   const board = new THREE.Mesh(new RoundedBoxGeometry(BW, BH, 0.28, 2, 0.04),
-    fading(new THREE.MeshPhysicalMaterial({ map: btex, roughness: 0.5, clearcoat: 0.5, clearcoatRoughness: 0.35 })));
+    fading(new THREE.MeshPhysicalMaterial({ color: 0x0b2f1f, roughness: 0.6, clearcoat: 0.4 })));
   board.position.z = boardTop - 0.14;
-  g.add(board);
+  const face = new THREE.Mesh(new THREE.PlaneGeometry(BW - 0.08, BH - 0.08),
+    fading(new THREE.MeshPhysicalMaterial({ map: btex, roughness: 0.5, clearcoat: 0.5, clearcoatRoughness: 0.35, polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -4 })));
+  face.position.z = boardTop + 0.002;
+  g.add(board, face);
   // solder joints where each pin meets its pad
   const solder = fading(new THREE.MeshPhysicalMaterial({ color: 0xc9ccd1, metalness: 1, roughness: 0.22 }));
   const fillet = new THREE.ConeGeometry(0.13, 0.12, 16);
   fillet.rotateX(Math.PI / 2);
-  pads.forEach(([x, y]) => { const f = new THREE.Mesh(fillet, solder); f.position.set(x, y, boardTop + 0.05); g.add(f); });
-  anchor(g, 'trace', 3.9, -W / 2 - 1.5, boardTop + 0.01);
-  anchor(g, 'board', 5.6, W / 2 + 2.2, boardTop + 0.01);
+  // underneath, where through-hole parts are actually soldered: a copper ring and a cone of solder round
+  // each pin
+  const under = new THREE.ConeGeometry(0.15, 0.16, 16);
+  under.rotateX(-Math.PI / 2);
+  const ring = new THREE.CircleGeometry(0.15, 20);
+  ring.rotateX(Math.PI);
+  const copper = fading(new THREE.MeshStandardMaterial({ color: 0xd8b46a, metalness: 1, roughness: 0.3, side: THREE.DoubleSide }));
+  pads.forEach(([x, y]) => {
+    const f = new THREE.Mesh(fillet, solder); f.position.set(x, y, boardTop + 0.05); g.add(f);
+    const r = new THREE.Mesh(ring, copper); r.position.set(x, y, boardTop - 0.283); g.add(r);
+    const u = new THREE.Mesh(under, solder); u.position.set(x, y, boardTop - 0.36); g.add(u);
+  });
+  anchor(g, 'trace', 4.6, -(W / 2 + 0.26 + 0.42 + 3 * 0.165), boardTop + 0.01);
+  anchor(g, 'board', 5.7, W / 2 + 2.9, boardTop + 0.01);
   anchor(g, 'die', 0.25, 0.2, H / 2 + 0.07);
   anchor(g, 'wire', -1.05, -0.95, H / 2 + 0.05);
   anchor(g, 'legs', -3.3, -(W / 2 + 0.26), -0.3);
@@ -611,7 +646,7 @@ export const THINGS = [
     stats: [['Across', '2', 'cm'], ['Neighbours each', '12', ''], ['Gold atoms', '10²²', ''], ['Tarnish', 'Never', '']] },
   { key: 'chip', name: 'Computer chip', title: 'A computer chip', child: 'silicon', size: 5.2e-2, model: z80Chip, formula: 'Si', icon: 'dip',
     note: 'The Z80 of 1976: a computer brain you could almost count',
-    blurb: 'Zilog’s Z80, designed by Federico Faggin and Masatoshi Shima and launched in 1976, ran the ZX Spectrum, the TRS-80 and MSX computers, and lives on inside the Game Boy’s processor. Its whole brain is about 8,500 transistors, drawn on the die in the window.',
+    blurb: 'Zilog’s Z80, designed by Federico Faggin and Masatoshi Shima and launched in 1976, ran the ZX Spectrum, the TRS-80 and MSX computers; the Game Boy’s processor is a close relative. Its whole brain is about 8,500 transistors, drawn on the die in the window.',
     stats: [['Year', '1976', ''], ['Transistors', '8,500', ''], ['Clock', '2.5', 'MHz'], ['Pins', '40', '']],
     compare: 'A modern processor has over a million times as many transistors, and runs more than a thousand times faster.',
     parts: [
