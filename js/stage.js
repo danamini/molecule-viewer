@@ -594,7 +594,11 @@ export function createStage(container, events = {}) {
 
   // Scrolling in past the closest zoom dives a level; scrolling out past the farthest surfaces.
   const push = { armed: 0, last: 0 };
+  // stop scrolling partway and the hint fades rather than staying on screen
+  let pushIdle = null;
   renderer.domElement.addEventListener('wheel', e => {
+    clearTimeout(pushIdle);
+    pushIdle = setTimeout(() => { push.armed = 0; events.onPush?.(0, 0); }, 700);
     if (transition) return;
     const d = controls.target.distanceTo(camera.position);
     const now = performance.now();

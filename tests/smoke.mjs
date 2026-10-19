@@ -247,7 +247,7 @@ await test('a finished dive clears the scroll hint', async page => {
   await go(page, 'thing-snowflake', 3000);
   await page.mouse.move(720, 450);
   for (let i = 0; i < 70; i++) { await page.mouse.wheel(0, -120); await wait(page, 25); }
-  await wait(page, 2800);
+  await wait(page, 3500); // wheel events still arriving at the end could re-show the hint; let them settle
   expect(await levels(page) === 'snowflake>molecule', 'wheel dived into the ice');
   expect(await page.evaluate(() => document.querySelector('#push').style.opacity) === '0', 'hint hidden');
 });

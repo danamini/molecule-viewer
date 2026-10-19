@@ -298,14 +298,21 @@ function z80Chip() {
   const L = 52.3 * MM, W = 14.0 * MM, H = 4.0 * MM;
   const ROW = 7.62 * MM, PITCH = 2.54 * MM, FIRST = (52.3 - 19 * 2.54) / 2 * MM;
   const epoxy = fading(new THREE.MeshStandardMaterial({ color: 0x141518, roughness: 0.7 }));
-  const body = new THREE.Mesh(new RoundedBoxGeometry(L, W, H, 2, 0.08), epoxy);
+  // the body, with the pin-1 notch cut into its end: a semicircle about 2 mm across, the whole height
+  const bev = 0.035, NOTCH = 1.0 * MM;
+  const bodyOutline = new THREE.Shape();
+  const hx = L / 2 - bev, hy = W / 2 - bev;
+  bodyOutline.moveTo(-hx, -hy);
+  bodyOutline.lineTo(hx, -hy);
+  bodyOutline.lineTo(hx, hy);
+  bodyOutline.lineTo(-hx, hy);
+  bodyOutline.lineTo(-hx, NOTCH);
+  bodyOutline.absarc(-hx, 0, NOTCH, Math.PI / 2, -Math.PI / 2, true);   // bites into the end, not out of it
+  bodyOutline.lineTo(-hx, -hy);
+  const bodyGeo = new THREE.ExtrudeGeometry(bodyOutline, { depth: H - 2 * bev, bevelEnabled: true, bevelThickness: bev, bevelSize: bev, bevelSegments: 2, curveSegments: 24 });
+  bodyGeo.translate(0, 0, -(H - 2 * bev) / 2);
+  const body = new THREE.Mesh(bodyGeo, epoxy);
   g.add(body);
-  // the notch at pin 1's end and the pin-1 dot
-  const notch = new THREE.Mesh(new THREE.CylinderGeometry(0.28, 0.28, 0.06, 24, 1, false, 0, Math.PI), fading(new THREE.MeshStandardMaterial({ color: 0x050506, roughness: 0.9 })));
-  notch.rotation.x = Math.PI / 2;
-  notch.rotation.y = -Math.PI / 2;
-  notch.position.set(-L / 2 + 0.02, 0, H / 2 + 0.005);
-  g.add(notch);
   // markings
   const mk = document.createElement('canvas');
   mk.width = 2048; mk.height = 600;
@@ -350,7 +357,7 @@ function z80Chip() {
   // 40 through-hole leads, each one flat stamped strip (0.25 mm thick): out of the body's side at mid-height,
   // a short step out to the row line, a bend, then down: 1.52 mm wide to the seating plane, tapering to a
   // 0.46 mm pin that goes through the board
-  const tin = fading(new THREE.MeshPhysicalMaterial({ color: 0xd4d8de, metalness: 1, roughness: 0.3 }));
+  const tin = fading(new THREE.MeshPhysicalMaterial({ color: 0xc4c8ce, metalness: 1, roughness: 0.48, envMapIntensity: 0.7 })); // satin tin plate, not a mirror
   const boardTop = -0.56, T = 0.25 * MM, WIDE = 1.52 * MM, PIN = 0.46 * MM;
   const tab = new THREE.BoxGeometry(WIDE, ROW - W / 2 + 0.06 + T / 2, T);
   const outline = new THREE.Shape();
@@ -412,7 +419,7 @@ function z80Chip() {
   // silkscreen: the chip's outline (notch at pin 1's end) and its reference
   bx.strokeStyle = 'rgba(235,240,240,0.8)'; bx.lineWidth = 0.025 * px;
   bx.strokeRect(U(-L / 2), V(W / 2), U(L / 2) - U(-L / 2), V(-W / 2) - V(W / 2));
-  bx.beginPath(); bx.arc(U(-L / 2), V(0), 0.28 * px, -Math.PI / 2, Math.PI / 2); bx.stroke();
+  bx.beginPath(); bx.arc(U(-L / 2), V(0), 1.0 * MM * px, -Math.PI / 2, Math.PI / 2); bx.stroke();
   bx.fillStyle = 'rgba(235,240,240,0.85)'; bx.font = `600 ${Math.round(0.26 * px)}px "IBM Plex Sans", sans-serif`;
   bx.fillText('U1  Z80 CPU', U(-L / 2 + 0.2), V(W / 2 + lane0 + 10 * laneGap + 0.25));
   const btex = new THREE.CanvasTexture(bc);
