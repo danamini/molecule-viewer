@@ -1,6 +1,6 @@
 # Molecule Viewer
 
-**[Open the viewer](https://danamini.github.io/molecule-viewer/)**
+**[Open the viewer](https://moleculeviewer.org)**
 
 An interactive 3D explorer of what things are made of. Start with something you could hold (a snowflake,
 a grain of salt, a computer chip) and zoom in: its material, its molecules, their atoms, the nucleus, a
