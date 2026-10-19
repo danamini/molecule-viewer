@@ -101,11 +101,11 @@ const randomDir = (v = new THREE.Vector3()) => {
 // A valence cloud around each atom (a 1s-like density, r^2 e^(-2r/a)), a bright point at each nucleus,
 // and the shared density of each bond: a sigma tube along the axis, plus pi lobes either side for
 // double and triple bonds. Ionic contacts get nothing: their electrons are not shared.
-export function moleculeCloud(mol, budget = 140000) {
+export function moleculeCloud(mol, budget = 240000) {
   const heavy = mol.atoms.filter(a => a.symbol !== 'H').length;
   const light = mol.atoms.length - heavy;
   const bonds = mol.bonds.filter(b => b.order > 0).length;
-  const want = heavy * 1400 + light * 520 + bonds * 420;
+  const want = heavy * 2800 + light * 800 + bonds * 700;
   const scale = Math.min(1, budget / Math.max(1, want));
   const buf = buffer();
   const col = new THREE.Color(), a = new THREE.Vector3(), b = new THREE.Vector3(), dir = new THREE.Vector3();
@@ -113,7 +113,7 @@ export function moleculeCloud(mol, budget = 140000) {
   for (const atom of mol.atoms) {
     const el = element(atom.symbol);
     col.setHex(cloudColor(atom.symbol));
-    const n = Math.round((atom.symbol === 'H' ? 380 : 1400) * scale);
+    const n = Math.round((atom.symbol === 'H' ? 800 : 2800) * scale);
     const r0 = el.covalent * 0.62;
     for (let i = 0; i < n; i++) {
       const rA = -0.5 * r0 * Math.log(Math.random() * Math.random() * Math.random());
@@ -136,7 +136,7 @@ export function moleculeCloud(mol, budget = 140000) {
     const len = axis.length();
     axis.normalize();
     const perp = bond.perp, perp2 = new THREE.Vector3().crossVectors(axis, perp).normalize();
-    const n = Math.round(420 * scale);
+    const n = Math.round(700 * scale);
     const along = () => 0.5 + gauss() * 0.2;
     const sample = (out, lobe) => {
       const t = Math.min(0.95, Math.max(0.05, along()));
@@ -162,7 +162,11 @@ export function moleculeCloud(mol, budget = 140000) {
       }
     }
   }
-  const pts = pointsFrom(buf, cloudMaterial({ size: 0.075, scatter: mol.radius * 3 + 10 }));
+  // twice the points, each smaller and dimmer: brightness then builds up where density is high, so the
+  // dense core around each nucleus stands out and the thin outer fringe stays faint, as real density does
+  const pts = pointsFrom(buf, cloudMaterial({ size: 0.058, scatter: mol.radius * 3 + 10 }));
+  pts.material.uniforms.uOpacity.value = 0.72;
+  pts.material.userData.baseOpacity = 0.72;
   return pts;
 }
 

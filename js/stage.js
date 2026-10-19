@@ -23,7 +23,7 @@ const ease = t => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
 const smooth = (a, b, t) => { const x = Math.min(1, Math.max(0, (t - a) / (b - a))); return x * x * (3 - 2 * x); };
 
 const LOOK = {
-  cloud: { bloom: 0.75, radius: 0.5, threshold: 0.0, ao: false, exposure: 1.0 },
+  cloud: { bloom: 0.52, radius: 0.42, threshold: 0.1, ao: false, exposure: 1.0 },
   ball: { bloom: 0.22, radius: 0.4, threshold: 0.82, ao: true, exposure: 1.05 },
   space: { bloom: 0.18, radius: 0.4, threshold: 0.85, ao: true, exposure: 1.05 },
   stick: { bloom: 0.22, radius: 0.4, threshold: 0.82, ao: true, exposure: 1.05 },
@@ -230,7 +230,7 @@ export function createStage(container, events = {}) {
         }
       },
       fade(f) {
-        if (styleName === 'cloud') visual.material.uniforms.uOpacity.value = f;
+        if (styleName === 'cloud') visual.material.uniforms.uOpacity.value = f * 0.72;
         else visual.traverse(o => {
           if (!o.material || o.material.visible === false) return;
           const base = o.material.isMeshBasicMaterial ? 0.35 : 1;
